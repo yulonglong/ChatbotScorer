@@ -1,0 +1,1 @@
+python main.py -o output-test -tr data/Joker.xml
