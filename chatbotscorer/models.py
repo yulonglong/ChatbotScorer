@@ -107,7 +107,7 @@ def load_model_architecture_and_weights(args):
     from keras.layers.embeddings import Embedding
     from keras.models import Sequential, Model, model_from_json
     from keras.layers.core import Dense, Dropout, Activation
-    from medlstm.my_layers import Attention, MeanOverTime, Conv1DWithMasking
+    from chatbotscorer.my_layers import Attention, MeanOverTime, Conv1DWithMasking
     logger.info('Loading model architecture from: ' + args.arch_path)
     with open(args.arch_path, 'r') as arch_file:
         model = model_from_json(arch_file.read(), custom_objects={

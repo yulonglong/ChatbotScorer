@@ -226,7 +226,7 @@ for fold in range(10):
         total_eval_time += evl_time
 
         logger.info('Epoch %d, train: %is (%.1fm), evaluation: %is (%.1fm)' % (ii, tr_time, tr_time/60.0, evl_time, evl_time/60.0))
-        logger.info('[Train] loss: %.4f' % (train_loss))
+        logger.info('[Train] loss: %.4f  accuracy: %.4f' % (train_history.history['loss'][0], train_history.history['acc'][0]))
 
         # Print and send email Epoch LSTM
         content = evl.print_info()
