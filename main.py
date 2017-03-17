@@ -77,6 +77,7 @@ global_train_x, global_train_y, global_dev_x, global_dev_y, global_test_x, globa
 ###########################################################################################
 ## 10 FOLD CROSS VALIDATION
 #
+total_f1 = 0
 for fold in range(10):
     logger.info("========================== FOLD %i ===============================" % fold)
     
@@ -229,7 +230,7 @@ for fold in range(10):
         logger.info('[Train] loss: %.4f  accuracy: %.4f' % (train_history.history['loss'][0], train_history.history['acc'][0]))
 
         # Print and send email Epoch LSTM
-        content = evl.print_info()
+        total_f1 += evl.print_info()
 
     ###############################################################################################################################
     ## Summary of the results
@@ -252,8 +253,8 @@ for fold in range(10):
     logger.info('  [DEV]  F1: %.3f, Recall: %.3f, Precision: %.3f, Spec: %.5f' % (evl.best_dev[0], evl.best_dev[1], evl.best_dev[2], evl.best_dev[3]))
     logger.info('  [TEST] F1: %.3f, Recall: %.3f, Precision: %.3f, Spec: %.5f' % (evl.best_test[0], evl.best_test[1], evl.best_test[2], evl.best_test[3]))
 
-    content = ('\r\n\r\nMissed @ Epoch %i: \r\n\r\n' % evl.best_test_missed_epoch)
-    content = content + ('  [TEST] F1: %.3f \r\n\r\n' % evl.best_test_missed)
-    content = content + ('Best @ Epoch %i: \r\n\r\n' % evl.best_dev_epoch)
-    content = content + ('  [DEV]  F1: %.3f, Recall: %.3f, Precision: %.3f, Spec: %.5f \r\n\r\n' % (evl.best_dev[0], evl.best_dev[1], evl.best_dev[2], evl.best_dev[3]))
-    content = content + ('  [TEST] F1: %.3f, Recall: %.3f, Precision: %.3f, Spec: %.5f \r\n\r\n' % (evl.best_test[0], evl.best_test[1], evl.best_test[2], evl.best_test[3]))
+
+logger.info('============================================')
+logger.info('Averaged Best F1-score across 10 folds:')
+logger.info('  [TEST] F1: %.3f' % total_f1/10.0)
+logger.info('============================================')

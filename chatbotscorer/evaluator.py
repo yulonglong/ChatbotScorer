@@ -149,4 +149,4 @@ class Evaluator(object):
                 self.best_test[0], self.best_test[1], self.best_test[2], self.best_test[3])
         )
         self.logger.info('------------------------------------------------------------------------')
-
+        return self.best_test[0]
