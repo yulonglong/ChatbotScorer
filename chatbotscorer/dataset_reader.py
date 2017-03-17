@@ -11,7 +11,7 @@ import re # regex
 import copy
 
 
-import xml.etree.ElementTree
+import xml.etree.ElementTree as ET
 
 # for multithreading
 import multiprocessing
@@ -198,7 +198,15 @@ def get_data(args, tokenize_text=True, to_lower=True, sort_by_len=False, vocab_p
 def load_dataset(args):
     logger.info("Processing data...")
 
-    e = xml.etree.ElementTree.parse(args.train_path).getroot()
+    root = ET.parse(args.train_path).getroot()
+
+    for dialogue in root:
+        for turn in dialogue:
+            for sentence in turn:
+                if (sentence.tag == 'speaker'):
+                    logger.info(sentence.text + ':')
+                if (sentence.tag == 'utterance'):
+                    logger.info('  ' + sentence.text)
 
     # data_x is a list of lists
     ((train_x, train_y, train_filename_y),
