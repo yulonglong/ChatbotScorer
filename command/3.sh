@@ -33,8 +33,8 @@ fi
 
 echo "Running script on ${theano_flags_device} : ${gpu_name}"
 
-expt_num="001"
-dataset="IRIS"
+expt_num="003"
+dataset="TickTock"
 
 vocab_size="4000"
 embedding_size="100"
