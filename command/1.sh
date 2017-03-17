@@ -39,7 +39,7 @@ dataset="IRIS"
 vocab_size="4000"
 embedding_size="300"
 
-model_type="cwrnn"
+model_type="cnn"
 cnn_dim="300"
 cnn_win="3"
 cnn_layer="1"
@@ -56,7 +56,7 @@ dropout="0.5"
 
 for rand in {1..5}
 do
-    THEANO_FLAGS="device=${theano_flags_device},floatX=float32,mode=FAST_RUN" python keras_lstm.py \
+    THEANO_FLAGS="device=${theano_flags_device},floatX=float32,mode=FAST_RUN" python main.py \
     -tr data/${dataset}.xml \
     -o expt${expt_num}${gpu_num}-${rand}-d${dataset}-v${vocab_size}-e${embedding_size}-t${model_type}-p${pooling_type}-c${cnn_dim}w${cnn_win}cl${cnn_layer}-r${rnn_type}${rnn_dim}rl${rnn_layer}-a${optimizer}-b${batch_size}-seed${rand}${gpu_num}78-${gpu_name} \
     -t ${model_type} -p ${pooling_type} \
