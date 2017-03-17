@@ -22,36 +22,9 @@ class Evaluator(object):
         self.model_type = model_type
         self.batch_size_eval = batch_size_eval
 
-        self.train_x, self.train_y, self.train_filename_y = (
-            train[0], train[1], train[2], train[3])
-        self.dev_x, self.dev_y, self.dev_filename_y = (
-            dev[0], dev[1], dev[2], dev[3])
-        self.test_x, self.test_y, self.test_filename_y = (
-            test[0], test[1], test[2], test[3])
-
-        # Sort data based on their length and pad them only per batch_size
-        self.train_x, self.train_y, self.train_filename_y = (
-            helper.sort_and_split_data_into_chunks(
-                self.train_x, self.train_y, self.train_filename_y,
-                batch_size_eval)
-        )
-
-        self.dev_x, self.dev_y, self.dev_filename_y= (
-            helper.sort_and_split_data_into_chunks(
-                self.dev_x, self.dev_y, self.dev_filename_y,
-                batch_size_eval)
-        )
-
-        self.test_x, self.test_y, self.test_filename_y = (
-            helper.sort_and_split_data_into_chunks(
-                self.test_x, self.test_y, self.test_filename_y,
-                batch_size_eval)
-        )
-
-        self.dev_mean = self.dev_y.mean()
-        self.dev_std = self.dev_y.std()
-        self.test_mean = self.test_y.mean()
-        self.test_std = self.test_y.std()
+        self.train_x, self.train_y = (train[0], train[1])
+        self.dev_x, self.dev_y = (dev[0], dev[1])
+        self.test_x, self.test_y = (test[0], test[1])
 
         self.train_y_org = self.train_y.astype('int32')
         self.dev_y_org = self.dev_y.astype('int32')
@@ -63,7 +36,6 @@ class Evaluator(object):
         self.best_test_missed = -1
         self.best_test_missed_epoch = -1
         self.dump_ref_scores()
-        self.dump_ref_filenames()
 
         self.dev_loss, self.dev_metric = 0.0, 0.0
         self.test_loss, self.test_metric = 0.0, 0.0
@@ -87,18 +59,6 @@ class Evaluator(object):
         self.train_pred = np.array([])
         self.dev_pred = np.array([])
         self.test_pred = np.array([])
-
-    def dump_ref_filenames(self):
-        """Dump the reference (ground truth) filenames to a file"""
-        dev_ref_filename_file = open(self.out_dir + '/preds/dev_ref_filenames.txt', "w")
-        for dev_filename in self.dev_filename_y:
-            dev_ref_filename_file.write(dev_filename + '\n')
-        dev_ref_filename_file.close()
-
-        test_ref_filename_file = open(self.out_dir + '/preds/test_ref_filenames.txt', "w")
-        for test_filename in self.test_filename_y:
-            test_ref_filename_file.write(test_filename + '\n')
-        test_ref_filename_file.close()
 
     def dump_ref_scores(self):
         """Dump reference (ground truth) scores"""
@@ -124,20 +84,17 @@ class Evaluator(object):
         self.dev_pred = np.array([])
         self.test_pred = np.array([])
 
-        for idx, _ in enumerate(self.train_x):
-            curr_train_pred = model.predict(
-                self.train_x[idx], batch_size=self.batch_size_eval).squeeze()
-            self.train_pred = np.append(self.train_pred, curr_train_pred)
+        curr_train_pred = model.predict(
+            self.train_x, batch_size=self.batch_size_eval).squeeze()
+        self.train_pred = np.append(self.train_pred, curr_train_pred)
 
-        for idx, _ in enumerate(self.dev_x):
-            curr_dev_pred = model.predict(
-                self.dev_x[idx], batch_size=self.batch_size_eval).squeeze()
-            self.dev_pred = np.append(self.dev_pred, curr_dev_pred)
+        curr_dev_pred = model.predict(
+            self.dev_x, batch_size=self.batch_size_eval).squeeze()
+        self.dev_pred = np.append(self.dev_pred, curr_dev_pred)
 
-        for idx, _ in enumerate(self.test_x):
-            curr_test_pred = model.predict(
-                self.test_x[idx], batch_size=self.batch_size_eval).squeeze()
-            self.test_pred = np.append(self.test_pred, curr_test_pred)
+        curr_test_pred = model.predict(
+            self.test_x, batch_size=self.batch_size_eval).squeeze()
+        self.test_pred = np.append(self.test_pred, curr_test_pred)
 
         # self.dump_train_predictions(self.train_pred)
         self.dump_predictions(self.dev_pred, self.test_pred, epoch)
