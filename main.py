@@ -229,12 +229,12 @@ for fold in range(10):
         logger.info('Epoch %d, train: %is (%.1fm), evaluation: %is (%.1fm)' % (ii, tr_time, tr_time/60.0, evl_time, evl_time/60.0))
         logger.info('[Train] loss: %.4f  accuracy: %.4f' % (train_history.history['loss'][0], train_history.history['acc'][0]))
 
-        # Print and send email Epoch LSTM
-        total_f1 += evl.print_info()
+        evl.print_info()
 
     ###############################################################################################################################
     ## Summary of the results
     #
+    total_f1 += evl.best_test[0]
 
     total_time = total_train_time + total_eval_time
 
@@ -253,8 +253,9 @@ for fold in range(10):
     logger.info('  [DEV]  F1: %.3f, Recall: %.3f, Precision: %.3f, Spec: %.5f' % (evl.best_dev[0], evl.best_dev[1], evl.best_dev[2], evl.best_dev[3]))
     logger.info('  [TEST] F1: %.3f, Recall: %.3f, Precision: %.3f, Spec: %.5f' % (evl.best_test[0], evl.best_test[1], evl.best_test[2], evl.best_test[3]))
 
+    logger.info('  [TEST] F1: %.3f' % (total_f1/10.0))
 
 logger.info('============================================')
 logger.info('Averaged Best F1-score across 10 folds:')
-logger.info('  [TEST] F1: %.3f' % total_f1/10.0)
+logger.info('  [TEST] F1: %.3f' % (total_f1/10.0))
 logger.info('============================================')
