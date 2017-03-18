@@ -33,9 +33,10 @@ fi
 
 echo "Running script on ${theano_flags_device} : ${gpu_name}"
 
-expt_num="005"
+expt_num="008"
 dataset="Joker"
 embedding="glove.6B"
+label_type="min"
 
 vocab_size="4000"
 embedding_size="100"
@@ -61,6 +62,7 @@ do
     -tr data/${dataset}.xml \
     --emb embedding/${embedding}.${embedding_size}d.txt \
     -o expt${expt_num}${gpu_num}-${rand}-d${dataset}-v${vocab_size}-e${embedding_size}-t${model_type}-p${pooling_type}-c${cnn_dim}w${cnn_win}cl${cnn_layer}-r${rnn_type}${rnn_dim}rl${rnn_layer}-a${optimizer}-b${batch_size}-seed${rand}${gpu_num}78-${gpu_name} \
+    -lt ${label_type} \
     -t ${model_type} -p ${pooling_type} \
     -cl ${cnn_layer} -c ${cnn_dim} -w ${cnn_win} \
     -rl ${rnn_layer} -u ${rnn_type} -r ${rnn_dim} \
