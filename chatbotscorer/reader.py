@@ -138,8 +138,12 @@ def read_dataset(args, fold, x, y, vocab, to_lower):
         curr_scores = np.array(curr_scores)
         if args.label_type == 'max':
             curr_scores = np.max(curr_scores)
+            if curr_scores > 0 and curr_scores < 1:
+                curr_scores = 1
         elif args.label_type == 'min':
             curr_scores = np.min(curr_scores)
+            if curr_scores > 0 and curr_scores < 1:
+                curr_scores = 0
         elif args.label_type == 'mean':
             curr_scores = np.mean(curr_scores)
         
