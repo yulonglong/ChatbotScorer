@@ -46,8 +46,8 @@ def create_model(args, overal_maxlen, vocab):
         conv2 = embed2
 
         for i in range(args.cnn_layer):
-            conv1 = Conv1DWithMasking(nb_filter=args.cnn_dim, filter_length=args.cnn_window_size, border_mode=cnn_border_mode, subsample_length=1)(embed1)
-            conv2 = Conv1DWithMasking(nb_filter=args.cnn_dim, filter_length=args.cnn_window_size, border_mode=cnn_border_mode, subsample_length=1)(embed2)
+            conv1 = Conv1DWithMasking(nb_filter=args.cnn_dim, filter_length=args.cnn_window_size, border_mode=cnn_border_mode, subsample_length=1)(conv1)
+            conv2 = Conv1DWithMasking(nb_filter=args.cnn_dim, filter_length=args.cnn_window_size, border_mode=cnn_border_mode, subsample_length=1)(conv2)
 
         merged = merge([conv1, conv2], mode='concat', concat_axis=1) # Concatenate the question and the answer by length (number of words)
 
