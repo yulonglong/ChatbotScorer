@@ -42,18 +42,12 @@ def create_model(args, overal_maxlen, vocab):
         embed1 = Embedding(args.vocab_size, args.emb_dim, mask_zero=True, name="Embedding1")(sequence1)
         embed2 = Embedding(args.vocab_size, args.emb_dim, mask_zero=True, name="Embedding2")(sequence2)
         
-        conv1 = Conv1DWithMasking(nb_filter=args.cnn_dim, filter_length=args.cnn_window_size, border_mode=cnn_border_mode, subsample_length=1)(embed1)
-        conv2 = Conv1DWithMasking(nb_filter=args.cnn_dim, filter_length=args.cnn_window_size, border_mode=cnn_border_mode, subsample_length=1)(embed2)
+        conv1 = embed1
+        conv2 = embed2
 
-        # conv = [None] * args.cnn_layer
-        # for i in range(args.cnn_layer):
-        #     conv[i] = Conv1DWithMasking(nb_filter=args.cnn_dim, filter_length=args.cnn_window_size+i, border_mode=cnn_border_mode, subsample_length=1)(embed)
-        #     conv[i] = Dropout(default_dropout)(conv[i])
-        # if args.cnn_layer > 1:
-        #     merged_conv = merge(conv, mode='concat', concat_axis=-1)
-        # else:
-        #     merged_conv = conv[0]
-        # merged = merged_conv
+        for i in range(args.cnn_layer):
+            conv1 = Conv1DWithMasking(nb_filter=args.cnn_dim, filter_length=args.cnn_window_size, border_mode=cnn_border_mode, subsample_length=1)(embed1)
+            conv2 = Conv1DWithMasking(nb_filter=args.cnn_dim, filter_length=args.cnn_window_size, border_mode=cnn_border_mode, subsample_length=1)(embed2)
 
         merged = merge([conv1, conv2], mode='concat', concat_axis=1) # Concatenate the question and the answer by length (number of words)
 
