@@ -73,6 +73,47 @@ def create_model(args, overal_maxlen, vocab):
                 model.emb_index.append(model_layer_index)
             model_layer_index += 1
 
+    elif args.model_type == 'rnn':
+        logger.info('Building a RNN model')
+        assert (args.rnn_dim > 0)
+
+        model = Sequential()
+        from keras.layers import Dense, Dropout, Embedding, LSTM, Input, merge
+        sequence1 = Input(shape=(None,), dtype='int32')
+        sequence2 = Input(shape=(None,), dtype='int32')
+        embed1 = Embedding(args.vocab_size, args.emb_dim, mask_zero=True, name="Embedding1")(sequence1)
+        embed2 = Embedding(args.vocab_size, args.emb_dim, mask_zero=True, name="Embedding2")(sequence2)
+
+        rnn1 = embed1
+        rnn2 = embed2
+        for i in range(args.cnn_layer):
+            rnn1 = LSTM(args.rnn_dim, return_sequences=True, dropout_W=default_dropout_W, dropout_U=default_dropout_U)(rnn1)
+            rnn2 = LSTM(args.rnn_dim, return_sequences=True, dropout_W=default_dropout_W, dropout_U=default_dropout_U)(rnn2)
+
+        merged = merge([rnn1, rnn2], mode='concat', concat_axis=1) # Concatenate the question and the answer by length (number of words)
+
+        # if pooling type is not specified, use attsum by default
+        if not args.pooling_type:
+            args.pooling_type = 'attsum'
+
+        if args.pooling_type == 'meanot':
+            pooled = MeanOverTime(mask_zero=True)(merged)
+        elif args.pooling_type.startswith('att'):
+            pooled = Attention(op=args.pooling_type, name="attention_layer")(merged)
+        logger.info('%s pooling layer added!', args.pooling_type)
+
+        densed = Dense(1)(pooled)
+        score = Activation('sigmoid')(densed)
+        model = Model(input=[sequence1, sequence2], output=score)
+        
+        # get the WordEmbedding layer index
+        model.emb_index = []
+        model_layer_index = 0
+        for test in model.layers:
+            if (test.name in {'Embedding1', 'Embedding2'}):
+                model.emb_index.append(model_layer_index)
+            model_layer_index += 1
+
     else:
         raise NotImplementedError
 

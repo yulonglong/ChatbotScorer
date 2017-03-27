@@ -59,6 +59,7 @@ U.print_args(args)
 
 valid_model_type = {
     'cnn',
+    'rnn'
 }
 
 assert args.model_type in valid_model_type
@@ -160,7 +161,7 @@ for fold in range(10):
     ############################################################################################
     ## Compute class weight (where data is usually imbalanced)
     #
-    
+
     class_weight = None
     if args.is_class_weight:
         class_weight = helper.compute_class_weight(np.array(train_y, dtype=K.floatx()))
