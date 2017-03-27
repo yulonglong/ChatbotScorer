@@ -36,10 +36,12 @@ parser.add_argument("-r", "--rnndim", dest="rnn_dim", type=int, metavar='<int>',
 parser.add_argument("-b", "--batch-size", dest="batch_size", type=int, metavar='<int>', default=32, help="Batch size for training (default=32)")
 parser.add_argument("-be", "--batch-size-eval", dest="batch_size_eval", type=int, metavar='<int>', default=256, help="Batch size for evaluation (default=256)")
 parser.add_argument("-v", "--vocab-size", dest="vocab_size", type=int, metavar='<int>', default=4000, help="Vocab size (default=4000)")
+parser.add_argument("-cw", "--class-weight", dest="is_class_weight", action='store_true', help="Flag to use class weight (default=False)")
 parser.add_argument("-do", "--dropout", dest="dropout_rate", type=float, metavar='<float>', default=0.5, help="The dropout rate in the model (default=0.5)")
 parser.add_argument("--emb", dest="emb_path", type=str, metavar='<str>', help="The path to the word embeddings file (Word2Vec format)")
 parser.add_argument("--epochs", dest="epochs", type=int, metavar='<int>', default=50, help="Number of epochs (default=50)")
 parser.add_argument("--seed", dest="seed", type=int, metavar='<int>', default=1337, help="Random seed (default=1337)")
+
 
 args = parser.parse_args()
 
@@ -157,9 +159,11 @@ for fold in range(10):
 
     ############################################################################################
     ## Compute class weight (where data is usually imbalanced)
-    # Always imbalanced in medical text data
-
-    # class_weight = helper.compute_class_weight(np.array(train_y, dtype=K.floatx()))
+    #
+    
+    class_weight = None
+    if args.is_class_weight:
+        class_weight = helper.compute_class_weight(np.array(train_y, dtype=K.floatx()))
 
     ###################################################################################################
     ## Optimizer algorithm
@@ -215,7 +219,7 @@ for fold in range(10):
         t0 = time()
 
         # Train in chunks of batch size and dynamically padded
-        train_history = model.fit(train_x, train_y, batch_size=args.batch_size, nb_epoch=1, verbose=0)
+        train_history = model.fit(train_x, train_y, batch_size=args.batch_size, class_weight=class_weight, nb_epoch=1, verbose=0)
             
         tr_time = time() - t0
         total_train_time += tr_time
