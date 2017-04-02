@@ -183,10 +183,6 @@ class Evaluator(object):
 
         
         self.logger.info('------------------------- MAJORITY PREDICTION ---------------------------')
-        
-        self.logger.info('[TRAIN] F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f' % (
-        	self.train_f1, self.train_recall, self.train_precision, self.train_accuracy))
-
         self.logger.info(
             '[DEV]   F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f (Best @ %i: {{%.3f}}, %.3f, %.3f, %.5f)' % (
                 self.dev_f1, self.dev_recall, self.dev_precision,
