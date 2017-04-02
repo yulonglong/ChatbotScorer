@@ -181,7 +181,6 @@ class Evaluator(object):
         self.test_specificity = helper.specificity_score(self.test_y_org, binary_test_pred)
         self.test_accuracy = accuracy_score(self.test_y_org, binary_test_pred)
 
-        
         self.logger.info('------------------------- MAJORITY PREDICTION ---------------------------')
         self.logger.info(
             '[DEV]   F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f (Best @ %i: {{%.3f}}, %.3f, %.3f, %.5f)' % (
