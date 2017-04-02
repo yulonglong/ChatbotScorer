@@ -31,6 +31,11 @@ if [[ $gpu_name == *"nscc"* ]]
         theano_flags_device=gpu
 fi
 
+if [[ $gpu_name == *"cpu"* ]]
+    then
+        theano_flags_device=cpu
+fi
+
 echo "Running script on ${theano_flags_device} : ${gpu_name}"
 
 expt_num="022"

@@ -14,6 +14,11 @@ if [ -z "$2" ]
         exit 1
 fi
 
+if [[ $gpu_name == *"cpu"* ]]
+    then
+        theano_flags_device=cpu
+fi
+
 # gpu0 is GTX 1080
 # gpu1 is TITANX no display
 # gpu2 is TITANX display
