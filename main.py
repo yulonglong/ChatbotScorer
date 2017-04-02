@@ -82,6 +82,8 @@ global_train_x, global_train_y, global_dev_x, global_dev_y, global_test_x, globa
 #
 total_f1 = 0
 total_acc = 0
+total_maj_f1 = 0
+total_maj_acc = 0
 for fold in range(10):
     logger.info("========================== FOLD %i ===============================" % fold)
     
@@ -238,10 +240,14 @@ for fold in range(10):
         evl.print_info()
 
     ###############################################################################################################################
-    ## Summary of the results
+    ## Summary of the results for the current fold
     #
+    evl.print_majority()
+    
     total_f1 += evl.best_test[0]
     total_acc += evl.best_test[3]
+    total_maj_f1 += evl.best_majority[0]
+    total_maj_acc += evl.best_majority[3]
 
     total_time = total_train_time + total_eval_time
 
@@ -260,9 +266,9 @@ for fold in range(10):
     logger.info('  [DEV]  F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f' % (evl.best_dev[0], evl.best_dev[1], evl.best_dev[2], evl.best_dev[3]))
     logger.info('  [TEST] F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f' % (evl.best_test[0], evl.best_test[1], evl.best_test[2], evl.best_test[3]))
 
-evl.print_majority()
 
 logger.info('============================================')
 logger.info('Averaged Best Score across 10 folds:')
+logger.info('  [MAJ]  F1: %.3f, Acc: %.5f' % (total_maj_f1/10.0, total_maj_acc/10.0))
 logger.info('  [TEST] F1: %.3f, Acc: %.5f' % (total_f1/10.0, total_acc/10.0))
 logger.info('============================================')

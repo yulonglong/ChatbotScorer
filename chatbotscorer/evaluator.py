@@ -32,6 +32,7 @@ class Evaluator(object):
 
         self.best_dev = [-1, -1, -1, -1]
         self.best_test = [-1, -1, -1, -1]
+        self.best_majority = [-1, -1, -1, -1]
         self.best_dev_epoch = -1
         self.best_test_missed = -1
         self.best_test_missed_epoch = -1
@@ -194,5 +195,7 @@ class Evaluator(object):
                 self.test_accuracy, self.best_dev_epoch,
                 self.best_test[0], self.best_test[1], self.best_test[2], self.best_test[3])
         )
+        self.best_majority = [self.test_f1, self.test_recall,
+                              self.test_precision, self.test_accuracy]
         self.logger.info('------------------------------------------------------------------------')
         
