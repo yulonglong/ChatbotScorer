@@ -50,11 +50,13 @@ class Evaluator(object):
         self.dev_precision = 0.0
         self.dev_f1 = 0.0
         self.dev_specificity = 0.0
+        self.dev_accuracy = 0.0
 
         self.test_recall = 0.0
         self.test_precision = 0.0
         self.test_f1 = 0.0
         self.test_specificity = 0.0
+        self.test_accuracy = 0.0
 
         self.train_pred = np.array([])
         self.dev_pred = np.array([])
@@ -111,18 +113,20 @@ class Evaluator(object):
         self.dev_precision = precision_score(self.dev_y_org, binary_dev_pred)
         self.dev_f1 = f1_score(self.dev_y_org, binary_dev_pred)
         self.dev_specificity = helper.specificity_score(self.dev_y_org, binary_dev_pred)
+        self.dev_accuracy = accuracy_score(self.dev_y_org, binary_dev_pred)
 
         binary_test_pred = helper.get_binary_predictions(self.test_pred)
         self.test_recall = recall_score(self.test_y_org, binary_test_pred)
         self.test_precision = precision_score(self.test_y_org, binary_test_pred)
         self.test_f1 = f1_score(self.test_y_org, binary_test_pred)
         self.test_specificity = helper.specificity_score(self.test_y_org, binary_test_pred)
+        self.test_accuracy = accuracy_score(self.test_y_org, binary_test_pred)
 
         if self.dev_f1 > self.best_dev[0]:
             self.best_dev = [self.dev_f1, self.dev_recall,
-                             self.dev_precision, self.dev_specificity]
+                             self.dev_precision, self.dev_accuracy]
             self.best_test = [self.test_f1, self.test_recall,
-                              self.test_precision, self.test_specificity]
+                              self.test_precision, self.test_accuracy]
             self.best_dev_epoch = epoch
             model.save_weights(self.out_dir + '/models/best_model_weights.h5', overwrite=True)
 
@@ -133,19 +137,19 @@ class Evaluator(object):
     def print_info(self):
         """Print information on the current performance of the model"""
 
-        self.logger.info('[TRAIN] F1: %.3f, Recall: %.3f, Precision: %.3f, Spec: %.5f, Acc: %.5f' % (
-        	self.train_f1, self.train_recall, self.train_precision, self.train_specificity, self.train_accuracy))
+        self.logger.info('[TRAIN] F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f' % (
+        	self.train_f1, self.train_recall, self.train_precision, self.train_accuracy))
 
         self.logger.info(
-            '[DEV]   F1: %.3f, Recall: %.3f, Precision: %.3f, Spec: %.5f (Best @ %i: {{%.3f}}, %.3f, %.3f, %.5f)' % (
+            '[DEV]   F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f (Best @ %i: {{%.3f}}, %.3f, %.3f, %.5f)' % (
                 self.dev_f1, self.dev_recall, self.dev_precision,
-                self.dev_specificity, self.best_dev_epoch,
+                self.dev_accuracy, self.best_dev_epoch,
                 self.best_dev[0], self.best_dev[1], self.best_dev[2], self.best_dev[3])
         )
         self.logger.info(
-            '[TEST]  F1: %.3f, Recall: %.3f, Precision: %.3f, Spec: %.5f (Best @ %i: {{%.3f}}, %.3f, %.3f, %.5f)' % (
+            '[TEST]  F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f (Best @ %i: {{%.3f}}, %.3f, %.3f, %.5f)' % (
                 self.test_f1, self.test_recall, self.test_precision,
-                self.test_specificity, self.best_dev_epoch,
+                self.test_accuracy, self.best_dev_epoch,
                 self.best_test[0], self.best_test[1], self.best_test[2], self.best_test[3])
         )
         self.logger.info('------------------------------------------------------------------------')
@@ -169,27 +173,30 @@ class Evaluator(object):
         self.dev_precision = precision_score(self.dev_y_org, binary_dev_pred)
         self.dev_f1 = f1_score(self.dev_y_org, binary_dev_pred)
         self.dev_specificity = helper.specificity_score(self.dev_y_org, binary_dev_pred)
+        self.dev_accuracy = accuracy_score(self.dev_y_org, binary_dev_pred)
 
         self.test_recall = recall_score(self.test_y_org, binary_test_pred)
         self.test_precision = precision_score(self.test_y_org, binary_test_pred)
         self.test_f1 = f1_score(self.test_y_org, binary_test_pred)
         self.test_specificity = helper.specificity_score(self.test_y_org, binary_test_pred)
+        self.test_accuracy = accuracy_score(self.test_y_org, binary_test_pred)
+
         
         self.logger.info('------------------------- MAJORITY PREDICTION ---------------------------')
         
-        self.logger.info('[TRAIN] F1: %.3f, Recall: %.3f, Precision: %.3f, Spec: %.5f, Acc: %.5f' % (
-        	self.train_f1, self.train_recall, self.train_precision, self.train_specificity, self.train_accuracy))
+        self.logger.info('[TRAIN] F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f' % (
+        	self.train_f1, self.train_recall, self.train_precision, self.train_accuracy))
 
         self.logger.info(
-            '[DEV]   F1: %.3f, Recall: %.3f, Precision: %.3f, Spec: %.5f (Best @ %i: {{%.3f}}, %.3f, %.3f, %.5f)' % (
+            '[DEV]   F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f (Best @ %i: {{%.3f}}, %.3f, %.3f, %.5f)' % (
                 self.dev_f1, self.dev_recall, self.dev_precision,
-                self.dev_specificity, self.best_dev_epoch,
+                self.dev_accuracy, self.best_dev_epoch,
                 self.best_dev[0], self.best_dev[1], self.best_dev[2], self.best_dev[3])
         )
         self.logger.info(
-            '[TEST]  F1: %.3f, Recall: %.3f, Precision: %.3f, Spec: %.5f (Best @ %i: {{%.3f}}, %.3f, %.3f, %.5f)' % (
+            '[TEST]  F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f (Best @ %i: {{%.3f}}, %.3f, %.3f, %.5f)' % (
                 self.test_f1, self.test_recall, self.test_precision,
-                self.test_specificity, self.best_dev_epoch,
+                self.test_accuracy, self.best_dev_epoch,
                 self.best_test[0], self.best_test[1], self.best_test[2], self.best_test[3])
         )
         self.logger.info('------------------------------------------------------------------------')

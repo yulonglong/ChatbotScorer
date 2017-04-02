@@ -81,6 +81,7 @@ global_train_x, global_train_y, global_dev_x, global_dev_y, global_test_x, globa
 ## 10 FOLD CROSS VALIDATION
 #
 total_f1 = 0
+total_acc = 0
 for fold in range(10):
     logger.info("========================== FOLD %i ===============================" % fold)
     
@@ -240,6 +241,7 @@ for fold in range(10):
     ## Summary of the results
     #
     total_f1 += evl.best_test[0]
+    total_acc += evl.best_test[3]
 
     total_time = total_train_time + total_eval_time
 
@@ -262,6 +264,6 @@ for fold in range(10):
 evl.print_majority()
 
 logger.info('============================================')
-logger.info('Averaged Best F1-score across 10 folds:')
-logger.info('  [TEST] F1: %.3f' % (total_f1/10.0))
+logger.info('Averaged Best Score across 10 folds:')
+logger.info('  [TEST] F1: %.3f, Acc: %.5f' % (total_f1/10.0, total_acc/10.0))
 logger.info('============================================')
