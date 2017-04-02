@@ -51,8 +51,8 @@ rnn_layer="2"
 pooling_type="attsum"
 
 optimizer="rmsprop"
-num_epoch="50"
-batch_size="32"
+num_epoch="30"
+batch_size="16"
 batch_eval_size="256"
 dropout="0.5"
 
