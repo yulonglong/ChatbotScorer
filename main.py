@@ -258,6 +258,9 @@ for fold in range(10):
     logger.info('  [DEV]  F1: %.3f, Recall: %.3f, Precision: %.3f, Spec: %.5f' % (evl.best_dev[0], evl.best_dev[1], evl.best_dev[2], evl.best_dev[3]))
     logger.info('  [TEST] F1: %.3f, Recall: %.3f, Precision: %.3f, Spec: %.5f' % (evl.best_test[0], evl.best_test[1], evl.best_test[2], evl.best_test[3]))
 
+
+evl.print_majority()
+
 logger.info('============================================')
 logger.info('Averaged Best F1-score across 10 folds:')
 logger.info('  [TEST] F1: %.3f' % (total_f1/10.0))
