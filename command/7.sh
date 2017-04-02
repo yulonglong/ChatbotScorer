@@ -35,7 +35,8 @@ echo "Running script on ${theano_flags_device} : ${gpu_name}"
 
 expt_num="007"
 dataset="IRIS"
-label_type="min"
+embedding="glove.6B"
+label_type="max"
 
 vocab_size="4000"
 embedding_size="100"
@@ -59,6 +60,7 @@ for rand in {1..5}
 do
     THEANO_FLAGS="device=${theano_flags_device},floatX=float32,mode=FAST_RUN" python main.py \
     -tr data/${dataset}.xml \
+    --emb embedding/${embedding}.${embedding_size}d.txt \
     -o expt${expt_num}${gpu_num}-${rand}-d${dataset}lt${label_type}-v${vocab_size}-e${embedding_size}-t${model_type}-p${pooling_type}-c${cnn_dim}w${cnn_win}cl${cnn_layer}-r${rnn_type}${rnn_dim}rl${rnn_layer}-a${optimizer}-b${batch_size}-seed${rand}${gpu_num}78-${gpu_name} \
     -lt ${label_type} \
     -t ${model_type} -p ${pooling_type} \
@@ -75,6 +77,7 @@ for rand in {1..5}
 do
     THEANO_FLAGS="device=${theano_flags_device},floatX=float32,mode=FAST_RUN" python main.py \
     -tr data/${dataset}.xml \
+    --emb embedding/${embedding}.${embedding_size}d.txt \
     -o expt${expt_num}${gpu_num}-${rand}-d${dataset}lt${label_type}-v${vocab_size}-e${embedding_size}-t${model_type}-p${pooling_type}-c${cnn_dim}w${cnn_win}cl${cnn_layer}-r${rnn_type}${rnn_dim}rl${rnn_layer}-a${optimizer}-b${batch_size}-seed${rand}${gpu_num}78-${gpu_name} \
     -lt ${label_type} \
     -t ${model_type} -p ${pooling_type} \
@@ -91,6 +94,7 @@ for rand in {1..5}
 do
     THEANO_FLAGS="device=${theano_flags_device},floatX=float32,mode=FAST_RUN" python main.py \
     -tr data/${dataset}.xml \
+    --emb embedding/${embedding}.${embedding_size}d.txt \
     -o expt${expt_num}${gpu_num}-${rand}-d${dataset}lt${label_type}-v${vocab_size}-e${embedding_size}${embedding}-t${model_type}-p${pooling_type}-c${cnn_dim}w${cnn_win}cl${cnn_layer}-r${rnn_type}${rnn_dim}rl${rnn_layer}-a${optimizer}-b${batch_size}-seed${rand}${gpu_num}78-${gpu_name} \
     -lt ${label_type} \
     -t ${model_type} -p ${pooling_type} \
