@@ -45,7 +45,7 @@ class W2VEmbReader:
 						self.emb_dim = len(tokens) - 1
 						assert self.emb_dim == emb_dim, 'The embeddings dimension does not match with the requested dimension'
 					else:
-						assert len(tokens) == self.emb_dim + 1, 'The number of dimensions does not match the header info'
+						if (len(tokens) != self.emb_dim + 1): continue
 					word = tokens[0]
 					vec = tokens[1:]
 					self.embeddings[word] = vec
