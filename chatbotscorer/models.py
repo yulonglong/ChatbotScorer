@@ -3,6 +3,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+emb_reader = None
+
 def create_model(args, overal_maxlen, vocab):
 
     import keras.backend as K
@@ -127,7 +129,9 @@ def create_model(args, overal_maxlen, vocab):
     if args.emb_path:
         from chatbotscorer.w2vEmbReader import W2VEmbReader as EmbReader
         logger.info("Loading embedding data...")
-        emb_reader = EmbReader(args.emb_path, emb_dim=args.emb_dim)
+        global emb_reader
+        if emb_reader == None:
+            emb_reader = EmbReader(args.emb_path, emb_dim=args.emb_dim)
         if (isinstance(model.emb_index,list)):
             for emb_index in model.emb_index:
                 model.layers[emb_index].W.set_value(emb_reader.get_emb_matrix_given_vocab(vocab, model.layers[emb_index].W.get_value()))
