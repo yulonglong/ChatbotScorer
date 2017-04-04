@@ -59,6 +59,7 @@ U.print_args(args)
 
 valid_model_type = {
     'cnn',
+    'vdcnn',
     'rnn'
 }
 

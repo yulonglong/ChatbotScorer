@@ -11,7 +11,7 @@ def create_model(args, overal_maxlen, vocab):
     from keras.layers.embeddings import Embedding
     from keras.models import Sequential, Model
     from keras.layers.core import Dense, Dropout, Activation
-    from chatbotscorer.my_layers import Attention, MeanOverTime, Conv1DWithMasking
+    from chatbotscorer.my_layers import Attention, MeanOverTime, Conv1DWithMasking, MaxPooling1DWithMasking
 
     #############################################################################
     ## Recurrence unit type
@@ -93,6 +93,61 @@ def create_model(args, overal_maxlen, vocab):
             rnn2 = LSTM(args.rnn_dim, return_sequences=True, dropout_W=default_dropout_W, dropout_U=default_dropout_U)(rnn2)
 
         merged = merge([rnn1, rnn2], mode='concat', concat_axis=1) # Concatenate the question and the answer by length (number of words)
+
+        # if pooling type is not specified, use attsum by default
+        if not args.pooling_type:
+            args.pooling_type = 'attsum'
+
+        if args.pooling_type == 'meanot':
+            pooled = MeanOverTime(mask_zero=True)(merged)
+        elif args.pooling_type.startswith('att'):
+            pooled = Attention(op=args.pooling_type, name="attention_layer")(merged)
+        logger.info('%s pooling layer added!', args.pooling_type)
+
+        densed = Dense(1)(pooled)
+        score = Activation('sigmoid')(densed)
+        model = Model(input=[sequence1, sequence2], output=score)
+        
+        # get the WordEmbedding layer index
+        model.emb_index = []
+        model_layer_index = 0
+        for test in model.layers:
+            if (test.name in {'Embedding1', 'Embedding2'}):
+                model.emb_index.append(model_layer_index)
+            model_layer_index += 1
+    
+    elif args.model_type == 'vdcnn':
+        logger.info('Building a Very Deep CNN model')
+        assert (args.cnn_dim > 0)
+
+        model = Sequential()
+        from keras.layers import Dense, Dropout, Embedding, LSTM, Input, merge
+        sequence1 = Input(shape=(None,), dtype='int32')
+        sequence2 = Input(shape=(None,), dtype='int32')
+        embed1 = Embedding(args.vocab_size, args.emb_dim, mask_zero=True, name="Embedding1")(sequence1)
+        embed2 = Embedding(args.vocab_size, args.emb_dim, mask_zero=True, name="Embedding2")(sequence2)
+        
+        conv1 = embed1
+        conv2 = embed2
+
+        curr_nb_filter = args.cnn_dim
+        conv1 = Conv1DWithMasking(nb_filter=curr_nb_filter*2, filter_length=args.cnn_window_size, border_mode=cnn_border_mode, subsample_length=1, activation='relu')(conv1)
+        conv1 = Dropout(default_dropout)(conv1)
+        conv2 = Conv1DWithMasking(nb_filter=curr_nb_filter*2, filter_length=args.cnn_window_size, border_mode=cnn_border_mode, subsample_length=1, activation='relu')(conv2)
+        conv2 = Dropout(default_dropout)(conv2)
+
+        for i in range(args.cnn_layer):
+            curr_nb_filter = curr_nb_filter * 2
+            conv1 = Conv1DWithMasking(nb_filter=curr_nb_filter, filter_length=args.cnn_window_size, border_mode=cnn_border_mode, subsample_length=1, activation='relu')(conv1)
+            conv1 = Conv1DWithMasking(nb_filter=curr_nb_filter, filter_length=args.cnn_window_size, border_mode=cnn_border_mode, subsample_length=1, activation='relu')(conv1)
+            conv1 = MaxPooling1DWithMasking()(conv1)
+            conv1 = Dropout(default_dropout)(conv1)
+            conv2 = Conv1DWithMasking(nb_filter=curr_nb_filter, filter_length=args.cnn_window_size, border_mode=cnn_border_mode, subsample_length=1, activation='relu')(conv2)
+            conv2 = Conv1DWithMasking(nb_filter=curr_nb_filter, filter_length=args.cnn_window_size, border_mode=cnn_border_mode, subsample_length=1, activation='relu')(conv2)
+            conv2 = MaxPooling1DWithMasking()(conv2)
+            conv2 = Dropout(default_dropout)(conv2)
+
+        merged = merge([conv1, conv2], mode='concat', concat_axis=1) # Concatenate the question and the answer by length (number of words)
 
         # if pooling type is not specified, use attsum by default
         if not args.pooling_type:
