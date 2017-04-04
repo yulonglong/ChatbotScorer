@@ -98,6 +98,7 @@ do
     -tr data/${dataset}.xml \
     -o expt${expt_num}${gpu_num}-${rand}-d${dataset}lt${label_type}-v${vocab_size}-e${embedding_size}-t${model_type}-p${pooling_type}-c${cnn_dim}w${cnn_win}cl${cnn_layer}-r${rnn_type}${rnn_dim}rl${rnn_layer}-a${optimizer}-b${batch_size}-seed${rand}${gpu_num}78-${gpu_name} \
     -t ${model_type} -p ${pooling_type} \
+    -lt ${label_type} \
     -cl ${cnn_layer} -c ${cnn_dim} -w ${cnn_win} \
     -rl ${rnn_layer} -u ${rnn_type} -r ${rnn_dim} \
     --epochs ${num_epoch} -a ${optimizer} -e ${embedding_size} -v ${vocab_size} -do ${dropout} \
