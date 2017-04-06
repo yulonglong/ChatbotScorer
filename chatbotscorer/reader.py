@@ -228,10 +228,13 @@ def load_dataset(args):
     train_x, train_y, dev_x, dev_y, test_x, test_y = [], [], [], [], [], []
     vocab = []
     maxlen = []
+
+    original_test_x  = []
     
     # 10-Fold cross validation, hence cut to 10
     for fold in range(10):
         curr_train_x, curr_train_y, curr_dev_x, curr_dev_y, curr_test_x, curr_test_y = getFoldDrawCards(fold, x, y)
+        original_test_x.append(curr_test_x)
        
         # Process, create vocab blah blah blah here
         curr_vocab = create_vocab(args, fold, curr_train_x, to_lower=True)
@@ -252,4 +255,4 @@ def load_dataset(args):
 
     logger.info("Data processing completed!")
 
-    return train_x, train_y, dev_x, dev_y, test_x, test_y, vocab, maxlen
+    return (train_x, train_y, dev_x, dev_y, test_x, test_y, original_test_x, vocab, maxlen)

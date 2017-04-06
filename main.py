@@ -76,7 +76,11 @@ from chatbotscorer.evaluator import Evaluator
 ## Prepare data
 #
 
-global_train_x, global_train_y, global_dev_x, global_dev_y, global_test_x, global_test_y, global_vocab, global_maxlen = dataset_reader.load_dataset(args)
+(global_train_x, global_train_y,
+ global_dev_x, global_dev_y,
+ global_test_x, global_test_y,
+ global_original_test_x,
+ global_vocab, global_maxlen) = dataset_reader.load_dataset(args)
 
 ###########################################################################################
 ## 10 FOLD CROSS VALIDATION
@@ -96,6 +100,8 @@ for fold in range(10):
     test_y = global_test_y[fold]
     vocab = global_vocab[fold]
     maxlen = global_vocab[fold]
+
+    original_test_x = global_original_test_x[fold] # To see real-life cases
 
     ############################################################################################
     ## Padding to dataset for statistics
@@ -159,7 +165,10 @@ for fold in range(10):
         (train_x, train_y),
         (dev_x, dev_y),
         (test_x, test_y),
-        args.model_type, batch_size_eval=args.batch_size_eval)
+        original_test_x,
+        args.model_type,
+        fold,
+        batch_size_eval=args.batch_size_eval)
 
 
     ############################################################################################

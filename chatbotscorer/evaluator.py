@@ -15,16 +15,18 @@ import helper as helper
 class Evaluator(object):
     """Evaluator class - A python class/module to calculate neural network performance."""
 
-    def __init__(self, logger, out_dir, train, dev, test, model_type, batch_size_eval=256):
+    def __init__(self, logger, out_dir, train, dev, test, original_test_x, model_type, fold, batch_size_eval=256):
         """Initialized Evaluator class"""
         self.logger = logger
         self.out_dir = out_dir
         self.model_type = model_type
+        self.fold = fold
         self.batch_size_eval = batch_size_eval
 
         self.train_x, self.train_y = (train[0], train[1])
         self.dev_x, self.dev_y = (dev[0], dev[1])
         self.test_x, self.test_y = (test[0], test[1])
+        self.original_test_x = original_test_x
 
         self.train_y_org = self.train_y.astype('int32')
         self.dev_y_org = self.dev_y.astype('int32')
@@ -65,19 +67,47 @@ class Evaluator(object):
 
     def dump_ref_scores(self):
         """Dump reference (ground truth) scores"""
-        np.savetxt(self.out_dir + '/preds/train_ref.txt', self.train_y_org, fmt='%i')
-        np.savetxt(self.out_dir + '/preds/dev_ref.txt', self.dev_y_org, fmt='%i')
-        np.savetxt(self.out_dir + '/preds/test_ref.txt', self.test_y_org, fmt='%i')
+        np.savetxt(self.out_dir + '/preds/train_ref_f' + str(self.fold) + '.txt', self.train_y_org, fmt='%i')
+        np.savetxt(self.out_dir + '/preds/dev_ref_f' + str(self.fold) + '.txt', self.dev_y_org, fmt='%i')
+        np.savetxt(self.out_dir + '/preds/test_ref_f' + str(self.fold) + '.txt', self.test_y_org, fmt='%i')
+
+    def dump_test_dataset(self):
+        """Dump test dataset together with the classification predictions"""
+        output_path = self.out_dir + '/data/test_data_f' + str(self.fold) + '.txt'
+        output = open(output_path,"w")
+
+        binary_test_pred = helper.get_binary_predictions(self.test_pred)
+        tps, fps, fns, tns = helper.confusion_matrix(self.test_y_org, binary_test_pred)
+
+        output.write("TP: " + str(tps) + ", FP: " + str(fps) + ", FN: " + str(fns) + ", TN: " + str(tns) + "\n")
+        output.write('F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f' % (
+                self.test_f1, self.test_recall, self.test_precision,
+                self.test_accuracy))
+        output.write('\n====================================================================================\n')
+
+        for i in range(len(self.test_y_org)):
+            output.write("Truth: " + str(self.test_y_org[i]))
+            output.write('\t')
+            output.write("Pred: " + str(int(binary_test_pred[i])))
+            output.write('\n')
+            output.write('## HUMAN   : ')
+            for j in range(len(self.original_test_x[0][i])):
+                output.write(self.original_test_x[0][i][j].encode('utf-8') + ' ')
+            output.write('\n')
+            output.write('## CHATBOT : ')
+            for j in range(len(self.original_test_x[1][i])):
+                output.write(self.original_test_x[1][i][j].encode('utf-8') + ' ')
+            output.write('\n====================================================================================\n')
 
     def dump_train_predictions(self, train_pred, epoch):
         """Dump predictions of the model on the training set"""
-        np.savetxt(self.out_dir + '/preds/train_pred_' + str(epoch) + '.txt',
+        np.savetxt(self.out_dir + '/preds/train_pred_' + str(epoch) + '_f' + str(self.fold) + '.txt',
                    train_pred, fmt='%.8f')
 
     def dump_predictions(self, dev_pred, test_pred, epoch):
         """Dump predictions of the model on the dev and test set"""
-        np.savetxt(self.out_dir + '/preds/dev_pred_' + str(epoch) + '.txt', dev_pred, fmt='%.8f')
-        np.savetxt(self.out_dir + '/preds/test_pred_' + str(epoch) + '.txt', test_pred, fmt='%.8f')
+        np.savetxt(self.out_dir + '/preds/dev_pred_' + str(epoch) + '_f' + str(self.fold) + '.txt', dev_pred, fmt='%.8f')
+        np.savetxt(self.out_dir + '/preds/test_pred_' + str(epoch) + '_f' + str(self.fold) + '.txt', test_pred, fmt='%.8f')
 
     def evaluate(self, model, epoch):
         """Evaluate on dev and test set, given a trained model at a given epoch"""
@@ -129,7 +159,8 @@ class Evaluator(object):
             self.best_test = [self.test_f1, self.test_recall,
                               self.test_precision, self.test_accuracy]
             self.best_dev_epoch = epoch
-            model.save_weights(self.out_dir + '/models/best_model_weights.h5', overwrite=True)
+            model.save_weights(self.out_dir + '/models/best_model_weights_f' + str(self.fold) + '.h5', overwrite=True)
+            self.dump_test_dataset()
 
         if self.test_f1 > self.best_test_missed:
             self.best_test_missed = self.test_f1

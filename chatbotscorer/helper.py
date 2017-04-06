@@ -30,6 +30,27 @@ def specificity_score(y_actual, y_hat):
     specificity = float(tns) / float(tns + fps)
     return specificity
 
+def confusion_matrix(y_actual, y_hat):
+    """Calculate the confusion matrix given ground truth and predicted class."""
+
+    tps, fps, tns, fns = 0, 0, 0, 0
+    y_hat_len = len(y_hat)
+
+    for i in range(y_hat_len):
+        if y_actual[i] == y_hat[i] == 1:
+            tps += 1
+    for i in range(y_hat_len):
+        if y_hat[i] == 1 and y_actual[i] != y_hat[i]:
+            fps += 1
+    for i in range(y_hat_len):
+        if y_actual[i] == y_hat[i] == 0:
+            tns += 1
+    for i in range(y_hat_len):
+        if y_hat[i] == 0 and y_actual[i] != y_hat[i]:
+            fns += 1
+
+    return tps, fps, fns, tns
+
 def get_binary_predictions(pred, threshold=0.5):
     '''
     Convert [0,1] real number predictions to binary 1 or 0 predictions
