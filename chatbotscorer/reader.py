@@ -9,6 +9,7 @@ import numpy as np
 import pickle as pk
 import re # regex
 import copy
+import os
 
 
 import xml.etree.ElementTree as ET
@@ -154,6 +155,7 @@ def read_dataset(args, fold, x, y, vocab, to_lower):
 
 def process_data(args):
     x1, x2, y = [], [], []
+    details_x = []
 
     root = ET.parse(args.train_path).getroot()
     for dialogue in root:
@@ -161,8 +163,11 @@ def process_data(args):
         curr_question = []
         curr_answer = []
         
+        dialogue_id = dialogue.get('id')
+        
         for turn in dialogue:
             curr_label = []
+            turn_id = turn.get('id')
             
             for sentence in turn:
                 if sentence.tag == 'speaker':
@@ -189,12 +194,16 @@ def process_data(args):
                     x1.append(curr_question)
                     x2.append(curr_answer)
                     y.append(curr_label)
+                    details_x.append([dialogue_id, turn_id])
                     
     x = [x1, x2]
-    return x, y
+    return x, y, details_x
 
-def getFoldDrawCards(fold, x, y):
+def getFoldDrawCards(fold, x, y, details_x=None):
     train_x1, train_x2, train_y, dev_x1, dev_x2, dev_y, test_x1, test_x2, test_y = [], [], [], [], [], [], [], [], []
+    train_details_x, dev_details_x, test_details_x = [], [], []
+    
+    
     validation_fold = fold+1
     if validation_fold > 9: validation_fold = 0
     for i in range(len(x[0])):
@@ -202,25 +211,31 @@ def getFoldDrawCards(fold, x, y):
             test_x1.append(x[0][i])
             test_x2.append(x[1][i])
             test_y.append(y[i])
+            if details_x:
+                test_details_x.append(details_x[i])
         elif i%10 == validation_fold:
             dev_x1.append(x[0][i])
             dev_x2.append(x[1][i])
             dev_y.append(y[i])
+            if details_x:
+                dev_details_x.append(details_x[i])
         else:
             train_x1.append(x[0][i])
             train_x2.append(x[1][i])
             train_y.append(y[i])
+            if details_x:
+                train_details_x.append(details_x[i])
             
     train_x = [train_x1, train_x2]
     dev_x = [dev_x1, dev_x2]
     test_x = [test_x1, test_x2]
-    return train_x, train_y, dev_x, dev_y, test_x, test_y
+    return train_x, train_y, dev_x, dev_y, test_x, test_y, (train_details_x, dev_details_x, test_details_x)
 
 # Main function wrapper that is called by main
 def load_dataset(args):
     logger.info("Processing data...")
 
-    x, y = process_data(args)
+    x, y, details_x = process_data(args)
     assert len(x[0]) == len(x[1])
     assert len(x[0]) == len(y)
     logger.info('Total number of USER-SYSTEM pair : ' + str(len(y)))
@@ -233,8 +248,13 @@ def load_dataset(args):
     
     # 10-Fold cross validation, hence cut to 10
     for fold in range(10):
-        curr_train_x, curr_train_y, curr_dev_x, curr_dev_y, curr_test_x, curr_test_y = getFoldDrawCards(fold, x, y)
+        curr_train_x, curr_train_y, curr_dev_x, curr_dev_y, curr_test_x, curr_test_y, (train_details_x, dev_details_x, test_details_x) = getFoldDrawCards(fold, x, y, details_x=details_x)
         original_test_x.append(curr_test_x)
+        
+        if (args.is_dump_data):
+            dump_data(args, fold, curr_train_x, curr_train_y, train_details_x, dataset_type='train')
+            dump_data(args, fold, curr_dev_x, curr_dev_y, dev_details_x, dataset_type='valid')
+            dump_data(args, fold, curr_test_x, curr_test_y, test_details_x, dataset_type='test')
        
         # Process, create vocab blah blah blah here
         curr_vocab = create_vocab(args, fold, curr_train_x, to_lower=True)
@@ -256,3 +276,18 @@ def load_dataset(args):
     logger.info("Data processing completed!")
 
     return (train_x, train_y, dev_x, dev_y, test_x, test_y, original_test_x, vocab, maxlen)
+
+
+def dump_data(args, fold, x, y, details_x, dataset_type=None):
+    ''' Dump data with the dialogue id and classes, dataset_type is either train, valid, or test'''
+    base = os.path.basename(args.train_path)
+    dataset_name = os.path.splitext(base)[0]
+    
+    output_path = args.out_dir_path + '/data/dump/' + dataset_name + '_fold' + str(fold) + '_' + dataset_type + '.txt'
+    output = open(output_path,"w")
+    assert len(x[0]) == len(y)
+    assert len(details_x) == len(y)
+    output.write("dialogue_id\tturn_id\tannotations\n")
+    for i in range(len(y)):
+        output.write(str(details_x[i][0]) + "\t" + str(details_x[i][1]) + "\t" + (', '.join(y[i])) + "\n")
+    

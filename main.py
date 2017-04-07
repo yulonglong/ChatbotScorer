@@ -41,6 +41,7 @@ parser.add_argument("-do", "--dropout", dest="dropout_rate", type=float, metavar
 parser.add_argument("--emb", dest="emb_path", type=str, metavar='<str>', help="The path to the word embeddings file (Word2Vec format)")
 parser.add_argument("--epochs", dest="epochs", type=int, metavar='<int>', default=50, help="Number of epochs (default=50)")
 parser.add_argument("--seed", dest="seed", type=int, metavar='<int>', default=1337, help="Random seed (default=1337)")
+parser.add_argument("-dd", "--dump-data", dest="is_dump_data", action='store_true', help="Flag to use to dump train, valid, and test data for all folds")
 
 
 args = parser.parse_args()
@@ -48,6 +49,8 @@ args = parser.parse_args()
 out_dir = args.out_dir_path
 
 U.mkdir_p(out_dir + '/data')
+if (args.is_dump_data):
+    U.mkdir_p(out_dir + '/data/dump')
 U.mkdir_p(out_dir + '/preds')
 U.mkdir_p(out_dir + '/models')
 U.set_logger(out_dir)
