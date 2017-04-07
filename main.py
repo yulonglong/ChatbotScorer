@@ -94,6 +94,10 @@ total_f1 = 0
 total_acc = 0
 total_maj_f1 = 0
 total_maj_acc = 0
+total_correlation = 0
+total_p_value = 0
+total_train_time = 0
+total_eval_time = 0
 for fold in range(10):
     logger.info("========================== FOLD %i ===============================" % fold)
     
@@ -198,6 +202,9 @@ for fold in range(10):
 
     loss = 'binary_crossentropy'
     metric = 'accuracy'
+    if args.label_type == 'mean':
+        loss = 'mean_squared_error'
+        metric = 'mean_absolute_error'
 
     from chatbotscorer.models import create_model
     model = create_model(args, maxlen, vocab)
@@ -232,8 +239,7 @@ for fold in range(10):
     # Print and send email Init LSTM
     content = evl.print_info()
 
-    total_train_time = 0
-    total_eval_time = 0
+
 
     for ii in range(args.epochs):
         t0 = time()
@@ -251,40 +257,52 @@ for fold in range(10):
         total_eval_time += evl_time
 
         logger.info('Epoch %d, train: %is (%.1fm), evaluation: %is (%.1fm)' % (ii, tr_time, tr_time/60.0, evl_time, evl_time/60.0))
-        logger.info('[Train] loss: %.4f  accuracy: %.4f' % (train_history.history['loss'][0], train_history.history['acc'][0]))
+        if args.label_type == 'mean':
+            logger.info('[Train] loss: %.4f  MAE: %.4f' % (train_history.history['loss'][0], train_history.history['mean_absolute_error'][0]))
+        else:
+            logger.info('[Train] loss: %.4f  accuracy: %.4f' % (train_history.history['loss'][0], train_history.history['acc'][0]))
 
         evl.print_info()
 
     ###############################################################################################################################
     ## Summary of the results for the current fold
     #
-    evl.print_majority()
-    
-    total_f1 += evl.best_test[0]
-    total_acc += evl.best_test[3]
-    total_maj_f1 += evl.best_majority[0]
-    total_maj_acc += evl.best_majority[3]
 
-    total_time = total_train_time + total_eval_time
+    if args.label_type == 'mean':
+        total_correlation += evl.best_test[0]
+        total_p_value += evl.best_test[1]
+    else:
+        evl.print_majority()
 
-    total_train_time_hours = total_train_time/3600
-    total_eval_time_hours = total_eval_time/3600
-    total_time_hours = total_time/3600
+        total_f1 += evl.best_test[0]
+        total_acc += evl.best_test[3]
+        total_maj_f1 += evl.best_majority[0]
+        total_maj_acc += evl.best_majority[3]
+        
+        logger.info('Missed @ Epoch %i:' % evl.best_test_missed_epoch)
+        logger.info('  [TEST] F1: %.3f' % evl.best_test_missed)
+        logger.info('Best @ Epoch %i:' % evl.best_dev_epoch)
+        logger.info('  [DEV]  F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f' % (evl.best_dev[0], evl.best_dev[1], evl.best_dev[2], evl.best_dev[3]))
+        logger.info('  [TEST] F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f' % (evl.best_test[0], evl.best_test[1], evl.best_test[2], evl.best_test[3]))
 
-    logger.info('Training:   %i seconds in total (%.1f hours)' % (total_train_time, total_train_time_hours))
-    logger.info('Evaluation: %i seconds in total (%.1f hours)' % (total_eval_time, total_eval_time_hours))
-    logger.info('Total time: %i seconds in total (%.1f hours)' % (total_time, total_time_hours))
-    logger.info('---------------------------------------------------------------------------------------')
 
-    logger.info('Missed @ Epoch %i:' % evl.best_test_missed_epoch)
-    logger.info('  [TEST] F1: %.3f' % evl.best_test_missed)
-    logger.info('Best @ Epoch %i:' % evl.best_dev_epoch)
-    logger.info('  [DEV]  F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f' % (evl.best_dev[0], evl.best_dev[1], evl.best_dev[2], evl.best_dev[3]))
-    logger.info('  [TEST] F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f' % (evl.best_test[0], evl.best_test[1], evl.best_test[2], evl.best_test[3]))
+total_time = total_train_time + total_eval_time
 
+total_train_time_hours = total_train_time/3600
+total_eval_time_hours = total_eval_time/3600
+total_time_hours = total_time/3600
+
+logger.info('Training:   %i seconds in total (%.1f hours)' % (total_train_time, total_train_time_hours))
+logger.info('Evaluation: %i seconds in total (%.1f hours)' % (total_eval_time, total_eval_time_hours))
+logger.info('Total time: %i seconds in total (%.1f hours)' % (total_time, total_time_hours))
+logger.info('---------------------------------------------------------------------------------------')
 
 logger.info('============================================')
 logger.info('Averaged Best Score across 10 folds:')
-logger.info('  [MAJ]  F1: %.3f, Acc: %.5f' % (total_maj_f1/10.0, total_maj_acc/10.0))
-logger.info('  [TEST] F1: %.3f, Acc: %.5f' % (total_f1/10.0, total_acc/10.0))
+if args.label_type == 'mean':
+    logger.info('  [TEST] Correlation-coef: %.3f, p-value: %.3f ' % (total_correlation/10.0, total_p_value/10.0))
+else:
+    logger.info('  [MAJ]  F1: %.3f, Acc: %.5f' % (total_maj_f1/10.0, total_maj_acc/10.0))
+    logger.info('  [TEST] F1: %.3f, Acc: %.5f' % (total_f1/10.0, total_acc/10.0))
+    
 logger.info('============================================')

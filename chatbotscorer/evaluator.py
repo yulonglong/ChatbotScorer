@@ -5,6 +5,7 @@ from sklearn.metrics import recall_score
 from sklearn.metrics import precision_score
 from sklearn.metrics import f1_score
 from sklearn.metrics import accuracy_score
+from scipy.stats import pearsonr
 
 import helper as helper
 
@@ -53,6 +54,8 @@ class Evaluator(object):
         self.train_f1 = 0.0
         self.train_specificity = 0.0
         self.train_accuracy = 0.0
+        self.train_correlation = 0.0
+        self.train_p_value = 0.0
 
         self.dev_tps = 0
         self.dev_fps = 0
@@ -63,6 +66,8 @@ class Evaluator(object):
         self.dev_f1 = 0.0
         self.dev_specificity = 0.0
         self.dev_accuracy = 0.0
+        self.dev_correlation = 0.0
+        self.dev_p_value = 0.0
 
         self.test_tps = 0
         self.test_fps = 0
@@ -73,6 +78,8 @@ class Evaluator(object):
         self.test_f1 = 0.0
         self.test_specificity = 0.0
         self.test_accuracy = 0.0
+        self.test_correlation = 0.0
+        self.test_p_value = 0.0
 
         self.train_pred = np.array([])
         self.dev_pred = np.array([])
@@ -143,53 +150,82 @@ class Evaluator(object):
 
         # self.dump_train_predictions(self.train_pred)
         self.dump_predictions(self.dev_pred, self.test_pred, epoch)
+        
+        if self.label_type == 'mean':
+            (self.train_correlation, self.train_p_value) = pearsonr(self.train_pred, self.train_y_org)
+            (self.dev_correlation, self.dev_p_value) = pearsonr(self.dev_pred, self.dev_y_org)
+            (self.test_correlation, self.test_p_value) = pearsonr(self.test_pred, self.test_y_org)
+            
+            if self.dev_correlation > self.best_dev[0]:
+                self.best_dev = [self.dev_correlation, self.dev_p_value, -1, -1]
+                self.best_test = [self.test_correlation, self.test_p_value, -1, -1]
+                self.best_dev_epoch = epoch
+                model.save_weights(self.out_dir + '/models/best_model_weights_f' + str(self.fold) + '.h5', overwrite=True)
+                
+            if self.test_correlation > self.best_test_missed:
+                self.best_test_missed = self.test_correlation
+                self.best_test_missed_epoch = epoch
+            
+        else:
+            binary_train_pred = helper.get_binary_predictions(self.train_pred)
+            (self.train_tps, self.train_fps, self.train_fns, self.train_tns,
+                self.train_recall, self.train_precision, self.train_specificity,
+                self.train_f1, self.train_accuracy) = helper.confusion_matrix(self.train_y_org, binary_train_pred, label_type=self.label_type)
 
-        binary_train_pred = helper.get_binary_predictions(self.train_pred)
-        (self.train_tps, self.train_fps, self.train_fns, self.train_tns,
-            self.train_recall, self.train_precision, self.train_specificity,
-            self.train_f1, self.train_accuracy) = helper.confusion_matrix(self.train_y_org, binary_train_pred, label_type=self.label_type)
+            binary_dev_pred = helper.get_binary_predictions(self.dev_pred)
+            (self.dev_tps, self.dev_fps, self.dev_fns, self.dev_tns,
+                self.dev_recall, self.dev_precision, self.dev_specificity,
+                self.dev_f1, self.dev_accuracy) = helper.confusion_matrix(self.dev_y_org, binary_dev_pred, label_type=self.label_type)
 
-        binary_dev_pred = helper.get_binary_predictions(self.dev_pred)
-        (self.dev_tps, self.dev_fps, self.dev_fns, self.dev_tns,
-            self.dev_recall, self.dev_precision, self.dev_specificity,
-            self.dev_f1, self.dev_accuracy) = helper.confusion_matrix(self.dev_y_org, binary_dev_pred, label_type=self.label_type)
+            binary_test_pred = helper.get_binary_predictions(self.test_pred)
+            (self.test_tps, self.test_fps, self.test_fns, self.test_tns,
+                self.test_recall, self.test_precision, self.test_specificity,
+                self.test_f1, self.test_accuracy) = helper.confusion_matrix(self.test_y_org, binary_test_pred, label_type=self.label_type)
 
-        binary_test_pred = helper.get_binary_predictions(self.test_pred)
-        (self.test_tps, self.test_fps, self.test_fns, self.test_tns,
-            self.test_recall, self.test_precision, self.test_specificity,
-            self.test_f1, self.test_accuracy) = helper.confusion_matrix(self.test_y_org, binary_test_pred, label_type=self.label_type)
+            if self.dev_f1 > self.best_dev[0]:
+                self.best_dev = [self.dev_f1, self.dev_recall,
+                                self.dev_precision, self.dev_accuracy]
+                self.best_test = [self.test_f1, self.test_recall,
+                                self.test_precision, self.test_accuracy]
+                self.best_dev_epoch = epoch
+                model.save_weights(self.out_dir + '/models/best_model_weights_f' + str(self.fold) + '.h5', overwrite=True)
+                self.dump_test_dataset()
 
-        if self.dev_f1 > self.best_dev[0]:
-            self.best_dev = [self.dev_f1, self.dev_recall,
-                             self.dev_precision, self.dev_accuracy]
-            self.best_test = [self.test_f1, self.test_recall,
-                              self.test_precision, self.test_accuracy]
-            self.best_dev_epoch = epoch
-            model.save_weights(self.out_dir + '/models/best_model_weights_f' + str(self.fold) + '.h5', overwrite=True)
-            self.dump_test_dataset()
-
-        if self.test_f1 > self.best_test_missed:
-            self.best_test_missed = self.test_f1
-            self.best_test_missed_epoch = epoch
+            if self.test_f1 > self.best_test_missed:
+                self.best_test_missed = self.test_f1
+                self.best_test_missed_epoch = epoch
 
     def print_info(self):
         """Print information on the current performance of the model"""
 
-        self.logger.info('[TRAIN] F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f' % (
-        	self.train_f1, self.train_recall, self.train_precision, self.train_accuracy))
-
-        self.logger.info(
-            '[DEV]   F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f (Best @ %i: {{%.3f}}, %.3f, %.3f, %.5f)' % (
-                self.dev_f1, self.dev_recall, self.dev_precision,
-                self.dev_accuracy, self.best_dev_epoch,
-                self.best_dev[0], self.best_dev[1], self.best_dev[2], self.best_dev[3])
-        )
-        self.logger.info(
-            '[TEST]  F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f (Best @ %i: {{%.3f}}, %.3f, %.3f, %.5f)' % (
-                self.test_f1, self.test_recall, self.test_precision,
-                self.test_accuracy, self.best_dev_epoch,
-                self.best_test[0], self.best_test[1], self.best_test[2], self.best_test[3])
-        )
+        if self.label_type == 'mean':
+            self.logger.info('[TRAIN] Correlation-coef: %.3f, p-value: %.3f' % (
+                self.train_correlation, self.train_p_value))
+            self.logger.info(
+                '[DEV]   Correlation-coef: %.3f, p-value: %.3f (Best @ %i: {{%.3f}}, %.3f)' % (
+                    self.dev_correlation, self.dev_p_value, self.best_dev_epoch,
+                    self.best_dev[0], self.best_dev[1])
+            )
+            self.logger.info(
+                '[TEST]  Correlation-coef: %.3f, p-value: %.3f (Best @ %i: {{%.3f}}, %.3f)' % (
+                    self.test_correlation, self.test_p_value, self.best_dev_epoch,
+                    self.best_test[0], self.best_test[1])
+            )
+        else:
+            self.logger.info('[TRAIN] F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f' % (
+                self.train_f1, self.train_recall, self.train_precision, self.train_accuracy))
+            self.logger.info(
+                '[DEV]   F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f (Best @ %i: {{%.3f}}, %.3f, %.3f, %.5f)' % (
+                    self.dev_f1, self.dev_recall, self.dev_precision,
+                    self.dev_accuracy, self.best_dev_epoch,
+                    self.best_dev[0], self.best_dev[1], self.best_dev[2], self.best_dev[3])
+            )
+            self.logger.info(
+                '[TEST]  F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f (Best @ %i: {{%.3f}}, %.3f, %.3f, %.5f)' % (
+                    self.test_f1, self.test_recall, self.test_precision,
+                    self.test_accuracy, self.best_dev_epoch,
+                    self.best_test[0], self.best_test[1], self.best_test[2], self.best_test[3])
+            )
         self.logger.info('------------------------------------------------------------------------')
         return self.best_test[0]
         
