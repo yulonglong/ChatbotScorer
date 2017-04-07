@@ -63,7 +63,8 @@ U.print_args(args)
 valid_model_type = {
     'cnn',
     'vdcnn',
-    'rnn'
+    'rnn',
+    'brnn'
 }
 
 assert args.model_type in valid_model_type
