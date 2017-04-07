@@ -167,6 +167,7 @@ for fold in range(10):
         (test_x, test_y),
         original_test_x,
         args.model_type,
+        args.label_type,
         fold,
         batch_size_eval=args.batch_size_eval)
 

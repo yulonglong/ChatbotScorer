@@ -30,26 +30,42 @@ def specificity_score(y_actual, y_hat):
     specificity = float(tns) / float(tns + fps)
     return specificity
 
-def confusion_matrix(y_actual, y_hat):
-    """Calculate the confusion matrix given ground truth and predicted class."""
+def confusion_matrix(y_actual, y_hat, label_type='None'):
+    """Calculate the confusion matrix and several evaluation metrics given ground truth and predicted class."""
 
     tps, fps, tns, fns = 0, 0, 0, 0
     y_hat_len = len(y_hat)
 
+    positive_class = 1
+    negative_class = 0
+
+    if label_type == 'min':
+        positive_class = 0
+        negative_class = 1
+
+
     for i in range(y_hat_len):
-        if y_actual[i] == y_hat[i] == 1:
+        if y_actual[i] == y_hat[i] == positive_class:
             tps += 1
     for i in range(y_hat_len):
-        if y_hat[i] == 1 and y_actual[i] != y_hat[i]:
+        if y_hat[i] == positive_class and y_actual[i] != y_hat[i]:
             fps += 1
     for i in range(y_hat_len):
-        if y_actual[i] == y_hat[i] == 0:
+        if y_actual[i] == y_hat[i] == negative_class:
             tns += 1
     for i in range(y_hat_len):
-        if y_hat[i] == 0 and y_actual[i] != y_hat[i]:
+        if y_hat[i] == negative_class and y_actual[i] != y_hat[i]:
             fns += 1
 
-    return tps, fps, fns, tns
+    recall, precision, specificity, f1, accuracy = 0.0, 0.0, 0.0, 0.0, 0.0
+
+    if (tps + fns > 0): recall = float(tps) / float(tps + fns)
+    if (tps + fps > 0): precision = float(tps) / float(tps + fps)
+    if (tns + fps > 0): specificity = float(tns) / float(tns + fps)
+    if (recall + precision > 0): f1 = 2.0 * recall * precision / (recall + precision)
+    if (tps + tns + fns + fps > 0): accuracy = float(tps + tns) / float (tps + tns + fns + fps)
+
+    return (tps, fps, fns, tns, recall, precision, specificity, f1, accuracy)
 
 def get_binary_predictions(pred, threshold=0.5):
     '''

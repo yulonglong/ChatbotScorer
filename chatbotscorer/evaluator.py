@@ -15,12 +15,13 @@ import helper as helper
 class Evaluator(object):
     """Evaluator class - A python class/module to calculate neural network performance."""
 
-    def __init__(self, logger, out_dir, train, dev, test, original_test_x, model_type, fold, batch_size_eval=256):
+    def __init__(self, logger, out_dir, train, dev, test, original_test_x, model_type, label_type, fold, batch_size_eval=256):
         """Initialized Evaluator class"""
         self.logger = logger
         self.out_dir = out_dir
         self.model_type = model_type
         self.fold = fold
+        self.label_type = label_type
         self.batch_size_eval = batch_size_eval
 
         self.train_x, self.train_y = (train[0], train[1])
@@ -43,18 +44,30 @@ class Evaluator(object):
         self.dev_loss, self.dev_metric = 0.0, 0.0
         self.test_loss, self.test_metric = 0.0, 0.0
 
+        self.train_tps = 0
+        self.train_fps = 0
+        self.train_fns = 0
+        self.train_tns = 0
         self.train_recall = 0.0
         self.train_precision = 0.0
         self.train_f1 = 0.0
         self.train_specificity = 0.0
         self.train_accuracy = 0.0
 
+        self.dev_tps = 0
+        self.dev_fps = 0
+        self.dev_fns = 0
+        self.dev_tns = 0
         self.dev_recall = 0.0
         self.dev_precision = 0.0
         self.dev_f1 = 0.0
         self.dev_specificity = 0.0
         self.dev_accuracy = 0.0
 
+        self.test_tps = 0
+        self.test_fps = 0
+        self.test_fns = 0
+        self.test_tns = 0
         self.test_recall = 0.0
         self.test_precision = 0.0
         self.test_f1 = 0.0
@@ -77,9 +90,8 @@ class Evaluator(object):
         output = open(output_path,"w")
 
         binary_test_pred = helper.get_binary_predictions(self.test_pred)
-        tps, fps, fns, tns = helper.confusion_matrix(self.test_y_org, binary_test_pred)
 
-        output.write("TP: " + str(tps) + ", FP: " + str(fps) + ", FN: " + str(fns) + ", TN: " + str(tns) + "\n")
+        output.write("TP: " + str(self.test_tps) + ", FP: " + str(self.test_fps) + ", FN: " + str(self.test_fns) + ", TN: " + str(self.test_tns) + "\n")
         output.write('F1: %.3f, Recall: %.3f, Precision: %.3f, Acc: %.5f' % (
                 self.test_f1, self.test_recall, self.test_precision,
                 self.test_accuracy))
@@ -133,25 +145,19 @@ class Evaluator(object):
         self.dump_predictions(self.dev_pred, self.test_pred, epoch)
 
         binary_train_pred = helper.get_binary_predictions(self.train_pred)
-        self.train_recall = recall_score(self.train_y_org, binary_train_pred)
-        self.train_precision = precision_score(self.train_y_org, binary_train_pred)
-        self.train_f1 = f1_score(self.train_y_org, binary_train_pred)
-        self.train_specificity = helper.specificity_score(self.train_y_org, binary_train_pred)
-        self.train_accuracy = accuracy_score(self.train_y_org, binary_train_pred)
+        (self.train_tps, self.train_fps, self.train_fns, self.train_tns,
+            self.train_recall, self.train_precision, self.train_specificity,
+            self.train_f1, self.train_accuracy) = helper.confusion_matrix(self.train_y_org, binary_train_pred, label_type=self.label_type)
 
         binary_dev_pred = helper.get_binary_predictions(self.dev_pred)
-        self.dev_recall = recall_score(self.dev_y_org, binary_dev_pred)
-        self.dev_precision = precision_score(self.dev_y_org, binary_dev_pred)
-        self.dev_f1 = f1_score(self.dev_y_org, binary_dev_pred)
-        self.dev_specificity = helper.specificity_score(self.dev_y_org, binary_dev_pred)
-        self.dev_accuracy = accuracy_score(self.dev_y_org, binary_dev_pred)
+        (self.dev_tps, self.dev_fps, self.dev_fns, self.dev_tns,
+            self.dev_recall, self.dev_precision, self.dev_specificity,
+            self.dev_f1, self.dev_accuracy) = helper.confusion_matrix(self.dev_y_org, binary_dev_pred, label_type=self.label_type)
 
         binary_test_pred = helper.get_binary_predictions(self.test_pred)
-        self.test_recall = recall_score(self.test_y_org, binary_test_pred)
-        self.test_precision = precision_score(self.test_y_org, binary_test_pred)
-        self.test_f1 = f1_score(self.test_y_org, binary_test_pred)
-        self.test_specificity = helper.specificity_score(self.test_y_org, binary_test_pred)
-        self.test_accuracy = accuracy_score(self.test_y_org, binary_test_pred)
+        (self.test_tps, self.test_fps, self.test_fns, self.test_tns,
+            self.test_recall, self.test_precision, self.test_specificity,
+            self.test_f1, self.test_accuracy) = helper.confusion_matrix(self.test_y_org, binary_test_pred, label_type=self.label_type)
 
         if self.dev_f1 > self.best_dev[0]:
             self.best_dev = [self.dev_f1, self.dev_recall,
@@ -200,18 +206,14 @@ class Evaluator(object):
             binary_dev_pred = np.ones(self.dev_y_org.shape[0])
             binary_test_pred = np.ones(self.test_y_org.shape[0])
             
-    
-        self.dev_recall = recall_score(self.dev_y_org, binary_dev_pred)
-        self.dev_precision = precision_score(self.dev_y_org, binary_dev_pred)
-        self.dev_f1 = f1_score(self.dev_y_org, binary_dev_pred)
-        self.dev_specificity = helper.specificity_score(self.dev_y_org, binary_dev_pred)
-        self.dev_accuracy = accuracy_score(self.dev_y_org, binary_dev_pred)
+        (self.dev_tps, self.dev_fps, self.dev_fns, self.dev_tns,
+            self.dev_recall, self.dev_precision, self.dev_specificity,
+            self.dev_f1, self.dev_accuracy) = helper.confusion_matrix(self.dev_y_org, binary_dev_pred, label_type=self.label_type)
 
-        self.test_recall = recall_score(self.test_y_org, binary_test_pred)
-        self.test_precision = precision_score(self.test_y_org, binary_test_pred)
-        self.test_f1 = f1_score(self.test_y_org, binary_test_pred)
-        self.test_specificity = helper.specificity_score(self.test_y_org, binary_test_pred)
-        self.test_accuracy = accuracy_score(self.test_y_org, binary_test_pred)
+        (self.test_tps, self.test_fps, self.test_fns, self.test_tns,
+            self.test_recall, self.test_precision, self.test_specificity,
+            self.test_f1, self.test_accuracy) = helper.confusion_matrix(self.test_y_org, binary_test_pred, label_type=self.label_type)
+
 
         self.logger.info('------------------------- MAJORITY PREDICTION ---------------------------')
         self.logger.info(
