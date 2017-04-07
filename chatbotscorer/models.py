@@ -116,7 +116,7 @@ def create_model(args, overal_maxlen, vocab):
                 model.emb_index.append(model_layer_index)
             model_layer_index += 1
             
-    elif args.model_type == 'brnn':
+    elif args.model_type == 'brnn' or args.model_type == 'brnn2':
         logger.info('Building a Bidirectional RNN model')
         assert (args.rnn_dim > 0)
 
@@ -136,9 +136,13 @@ def create_model(args, overal_maxlen, vocab):
             rnn1backward = LSTM(args.rnn_dim, return_sequences=True, dropout_W=default_dropout_W, dropout_U=default_dropout_U, go_backwards=True)(rnn1backward)
             rnn2forward = LSTM(args.rnn_dim, return_sequences=True, dropout_W=default_dropout_W, dropout_U=default_dropout_U)(rnn2forward)
             rnn2backward = LSTM(args.rnn_dim, return_sequences=True, dropout_W=default_dropout_W, dropout_U=default_dropout_U, go_backwards=True)(rnn2backward)
-
-        mergedHuman = merge([rnn1forward, rnn1backward], mode='concat', concat_axis=-1) # Concatenate the question and the answer by length (number of words)
-        mergedChatbot = merge([rnn2forward, rnn2backward], mode='concat', concat_axis=-1) # Concatenate the question and the answer by length (number of words)
+        
+        if args.model_type == 'brnn':
+            mergedHuman = merge([rnn1forward, rnn1backward], mode='concat', concat_axis=-1) # Concatenate the question and the answer by length (number of words)
+            mergedChatbot = merge([rnn2forward, rnn2backward], mode='concat', concat_axis=-1) # Concatenate the question and the answer by length (number of words)
+        elif args.model_type == 'brnn2':
+            mergedHuman = merge([rnn1forward, rnn1backward], mode='concat', concat_axis=1) # Concatenate the question and the answer by length (number of words)
+            mergedChatbot = merge([rnn2forward, rnn2backward], mode='concat', concat_axis=1) # Concatenate the question and the answer by length (number of words)
         
         merged = merge([mergedHuman, mergedChatbot], mode='concat', concat_axis=1) # Concatenate the question and the answer by length (number of words)
 

@@ -64,7 +64,8 @@ valid_model_type = {
     'cnn',
     'vdcnn',
     'rnn',
-    'brnn'
+    'brnn',
+    'brnn2',
 }
 
 assert args.model_type in valid_model_type
