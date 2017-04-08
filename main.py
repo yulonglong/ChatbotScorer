@@ -94,8 +94,12 @@ total_f1 = 0
 total_acc = 0
 total_maj_f1 = 0
 total_maj_acc = 0
+
 total_correlation = 0
 total_p_value = 0
+total_test_pred = np.array([])
+total_test_y = np.array([])
+
 total_train_time = 0
 total_eval_time = 0
 for fold in range(10):
@@ -271,6 +275,9 @@ for fold in range(10):
     if args.label_type == 'mean':
         total_correlation += evl.best_test[0]
         total_p_value += evl.best_test[1]
+        total_test_pred = np.append(total_test_pred, evl.test_best_pred)
+        total_test_y = np.append(total_test_y, evl.test_y_org)
+        
     else:
         evl.print_majority()
 
@@ -300,7 +307,10 @@ logger.info('-------------------------------------------------------------------
 logger.info('============================================')
 logger.info('Averaged Best Score across 10 folds:')
 if args.label_type == 'mean':
-    logger.info('  [TEST] Correlation-coef: %.3f, p-value: %.3f ' % (total_correlation/10.0, total_p_value/10.0))
+    logger.info('  [AVG-TEST]   Correlation-coef: %.3f, p-value: %.5f ' % (total_correlation/10.0, total_p_value/10.0))
+    from scipy.stats import pearsonr
+    (pearson_coef, pearson_p_value) = pearsonr(total_test_pred, total_test_y)
+    logger.info('  [TOTAL-TEST] Correlation-coef: %.3f, p-value: %.5f ' % (pearson_coef, pearson_p_value))
 else:
     logger.info('  [MAJ]  F1: %.3f, Acc: %.5f' % (total_maj_f1/10.0, total_maj_acc/10.0))
     logger.info('  [TEST] F1: %.3f, Acc: %.5f' % (total_f1/10.0, total_acc/10.0))

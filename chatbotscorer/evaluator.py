@@ -80,6 +80,7 @@ class Evaluator(object):
         self.test_accuracy = 0.0
         self.test_correlation = 0.0
         self.test_p_value = 0.0
+        self.test_best_pred = np.array([])
 
         self.train_pred = np.array([])
         self.dev_pred = np.array([])
@@ -136,17 +137,14 @@ class Evaluator(object):
         self.dev_pred = np.array([])
         self.test_pred = np.array([])
 
-        curr_train_pred = model.predict(
+        self.train_pred = model.predict(
             self.train_x, batch_size=self.batch_size_eval).squeeze()
-        self.train_pred = np.append(self.train_pred, curr_train_pred)
 
-        curr_dev_pred = model.predict(
+        self.dev_pred = model.predict(
             self.dev_x, batch_size=self.batch_size_eval).squeeze()
-        self.dev_pred = np.append(self.dev_pred, curr_dev_pred)
 
-        curr_test_pred = model.predict(
+        self.test_pred = model.predict(
             self.test_x, batch_size=self.batch_size_eval).squeeze()
-        self.test_pred = np.append(self.test_pred, curr_test_pred)
 
         # self.dump_train_predictions(self.train_pred)
         self.dump_predictions(self.dev_pred, self.test_pred, epoch)
@@ -161,6 +159,7 @@ class Evaluator(object):
                 self.best_test = [self.test_correlation, self.test_p_value, -1, -1]
                 self.best_dev_epoch = epoch
                 model.save_weights(self.out_dir + '/models/best_model_weights_f' + str(self.fold) + '.h5', overwrite=True)
+                self.test_best_pred = self.test_pred
                 
             if self.test_correlation > self.best_test_missed:
                 self.best_test_missed = self.test_correlation
@@ -199,15 +198,15 @@ class Evaluator(object):
         """Print information on the current performance of the model"""
 
         if self.label_type == 'mean':
-            self.logger.info('[TRAIN] Correlation-coef: %.3f, p-value: %.3f' % (
+            self.logger.info('[TRAIN] Correlation-coef: %.3f, p-value: %.5f' % (
                 self.train_correlation, self.train_p_value))
             self.logger.info(
-                '[DEV]   Correlation-coef: %.3f, p-value: %.3f (Best @ %i: {{%.3f}}, %.3f)' % (
+                '[DEV]   Correlation-coef: %.3f, p-value: %.5f (Best @ %i: {{%.3f}}, %.5f)' % (
                     self.dev_correlation, self.dev_p_value, self.best_dev_epoch,
                     self.best_dev[0], self.best_dev[1])
             )
             self.logger.info(
-                '[TEST]  Correlation-coef: %.3f, p-value: %.3f (Best @ %i: {{%.3f}}, %.3f)' % (
+                '[TEST]  Correlation-coef: %.3f, p-value: %.5f (Best @ %i: {{%.3f}}, %.5f)' % (
                     self.test_correlation, self.test_p_value, self.best_dev_epoch,
                     self.best_test[0], self.best_test[1])
             )
