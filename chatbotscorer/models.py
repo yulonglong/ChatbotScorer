@@ -50,6 +50,8 @@ def create_model(args, overal_maxlen, vocab):
         for i in range(args.cnn_layer):
             conv1 = Conv1DWithMasking(nb_filter=args.cnn_dim, filter_length=args.cnn_window_size, border_mode=cnn_border_mode, subsample_length=1)(conv1)
             conv2 = Conv1DWithMasking(nb_filter=args.cnn_dim, filter_length=args.cnn_window_size, border_mode=cnn_border_mode, subsample_length=1)(conv2)
+            conv1 = Dropout(default_dropout)(conv1)
+            conv2 = Dropout(default_dropout)(conv2)
 
         merged = merge([conv1, conv2], mode='concat', concat_axis=1) # Concatenate the question and the answer by length (number of words)
 
@@ -91,6 +93,8 @@ def create_model(args, overal_maxlen, vocab):
         for i in range(args.rnn_layer):
             rnn1 = LSTM(args.rnn_dim, return_sequences=True, dropout_W=default_dropout_W, dropout_U=default_dropout_U)(rnn1)
             rnn2 = LSTM(args.rnn_dim, return_sequences=True, dropout_W=default_dropout_W, dropout_U=default_dropout_U)(rnn2)
+            rnn1 = Dropout(default_dropout)(rnn1)
+            rnn2 = Dropout(default_dropout)(rnn2)
 
         merged = merge([rnn1, rnn2], mode='concat', concat_axis=1) # Concatenate the question and the answer by length (number of words)
 
@@ -136,7 +140,10 @@ def create_model(args, overal_maxlen, vocab):
             rnn1backward = LSTM(args.rnn_dim, return_sequences=True, dropout_W=default_dropout_W, dropout_U=default_dropout_U, go_backwards=True)(rnn1backward)
             rnn2forward = LSTM(args.rnn_dim, return_sequences=True, dropout_W=default_dropout_W, dropout_U=default_dropout_U)(rnn2forward)
             rnn2backward = LSTM(args.rnn_dim, return_sequences=True, dropout_W=default_dropout_W, dropout_U=default_dropout_U, go_backwards=True)(rnn2backward)
-        
+            rnn1forward = Dropout(default_dropout)(rnn1forward)
+            rnn1backward = Dropout(default_dropout)(rnn1backward)
+            rnn2forward = Dropout(default_dropout)(rnn2forward)
+            rnn2backward = Dropout(default_dropout)(rnn2backward)
         if args.model_type == 'brnn':
             mergedHuman = merge([rnn1forward, rnn1backward], mode='concat', concat_axis=-1) # Concatenate the question and the answer by length (number of words)
             mergedChatbot = merge([rnn2forward, rnn2backward], mode='concat', concat_axis=-1) # Concatenate the question and the answer by length (number of words)
