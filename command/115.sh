@@ -59,7 +59,7 @@ optimizer="rmsprop"
 num_epoch="30"
 batch_size="16"
 batch_eval_size="256"
-dropout="0.5"
+dropout="0.8"
 
 for rand in {1..5}
 do
