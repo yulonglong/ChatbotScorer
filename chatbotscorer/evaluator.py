@@ -33,6 +33,10 @@ class Evaluator(object):
         self.train_y_org = self.train_y.astype('int32')
         self.dev_y_org = self.dev_y.astype('int32')
         self.test_y_org = self.test_y.astype('int32')
+        if label_type == 'mean':
+            self.train_y_org = self.train_y
+            self.dev_y_org = self.dev_y
+            self.test_y_org = self.test_y
 
         self.best_dev = [-1, -1, -1, -1]
         self.best_test = [-1, -1, -1, -1]
@@ -88,9 +92,12 @@ class Evaluator(object):
 
     def dump_ref_scores(self):
         """Dump reference (ground truth) scores"""
-        np.savetxt(self.out_dir + '/preds/train_ref_f' + str(self.fold) + '.txt', self.train_y_org, fmt='%i')
-        np.savetxt(self.out_dir + '/preds/dev_ref_f' + str(self.fold) + '.txt', self.dev_y_org, fmt='%i')
-        np.savetxt(self.out_dir + '/preds/test_ref_f' + str(self.fold) + '.txt', self.test_y_org, fmt='%i')
+        format = '%i'
+        if self.label_type == 'mean':
+            format = '%.8f'
+        np.savetxt(self.out_dir + '/preds/train_ref_f' + str(self.fold) + '.txt', self.train_y_org, fmt=format)
+        np.savetxt(self.out_dir + '/preds/dev_ref_f' + str(self.fold) + '.txt', self.dev_y_org, fmt=format)
+        np.savetxt(self.out_dir + '/preds/test_ref_f' + str(self.fold) + '.txt', self.test_y_org, fmt=format)
 
     def dump_test_dataset(self):
         """Dump test dataset together with the classification predictions"""
