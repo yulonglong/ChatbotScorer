@@ -38,7 +38,7 @@ fi
 
 echo "Running script on ${theano_flags_device} : ${gpu_name}"
 
-expt_num="118"
+expt_num="121"
 dataset="IRIS"
 embedding="glove.6B"
 label_type="mean"
@@ -53,7 +53,7 @@ cnn_layer="1"
 rnn_type="lstm"
 rnn_dim="300"
 rnn_layer="1"
-pooling_type="attsum"
+pooling_type="meanot"
 
 optimizer="rmsprop"
 num_epoch="30"
@@ -75,7 +75,7 @@ do
     -b ${batch_size} -be ${batch_eval_size} --seed ${rand}${gpu_num}78
 done
 
-expt_num="119"
+expt_num="122"
 dataset="Joker"
 
 for rand in {1..5}
@@ -92,7 +92,7 @@ do
     -b ${batch_size} -be ${batch_eval_size} --seed ${rand}${gpu_num}78
 done
 
-expt_num="120"
+expt_num="123"
 dataset="TickTock"
 
 for rand in {1..5}

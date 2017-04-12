@@ -76,6 +76,53 @@ def create_model(args, overal_maxlen, vocab):
             if (test.name in {'Embedding1', 'Embedding2'}):
                 model.emb_index.append(model_layer_index)
             model_layer_index += 1
+            
+    if args.model_type == 'cnn2':
+        logger.info('Building a CNN2 model (concat after pooling)')
+        assert (args.cnn_dim > 0)
+
+        model = Sequential()
+        from keras.layers import Dense, Dropout, Embedding, LSTM, Input, merge
+        sequence1 = Input(shape=(None,), dtype='int32')
+        sequence2 = Input(shape=(None,), dtype='int32')
+        embed1 = Embedding(args.vocab_size, args.emb_dim, mask_zero=True, name="Embedding1")(sequence1)
+        embed2 = Embedding(args.vocab_size, args.emb_dim, mask_zero=True, name="Embedding2")(sequence2)
+        
+        conv1 = embed1
+        conv2 = embed2
+
+        for i in range(args.cnn_layer):
+            conv1 = Conv1DWithMasking(nb_filter=args.cnn_dim, filter_length=args.cnn_window_size, border_mode=cnn_border_mode, subsample_length=1)(conv1)
+            conv2 = Conv1DWithMasking(nb_filter=args.cnn_dim, filter_length=args.cnn_window_size, border_mode=cnn_border_mode, subsample_length=1)(conv2)
+            conv1 = Dropout(default_dropout)(conv1)
+            conv2 = Dropout(default_dropout)(conv2)
+
+
+        # if pooling type is not specified, use attsum by default
+        if not args.pooling_type:
+            args.pooling_type = 'attsum'
+
+        if args.pooling_type == 'meanot':
+            pooled1 = MeanOverTime(mask_zero=True)(conv1)
+            pooled2 = MeanOverTime(mask_zero=True)(conv2)
+        elif args.pooling_type.startswith('att'):
+            pooled1 = Attention(op=args.pooling_type, name="attention_layer1")(conv1)
+            pooled2 = Attention(op=args.pooling_type, name="attention_layer2")(conv2)
+        logger.info('%s pooling layer added!', args.pooling_type)
+
+        merged = merge([pooled1, pooled2], mode='concat', concat_axis=-1) # Concatenate the question and the answer by length (number of words)
+
+        densed = Dense(1)(merged)
+        score = Activation('sigmoid')(densed)
+        model = Model(input=[sequence1, sequence2], output=score)
+        
+        # get the WordEmbedding layer index
+        model.emb_index = []
+        model_layer_index = 0
+        for test in model.layers:
+            if (test.name in {'Embedding1', 'Embedding2'}):
+                model.emb_index.append(model_layer_index)
+            model_layer_index += 1
 
     elif args.model_type == 'rnn':
         logger.info('Building a RNN model')
