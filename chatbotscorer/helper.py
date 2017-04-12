@@ -5,6 +5,7 @@ from time import time
 import sys
 import utils as U
 import pickle as pk
+import copy
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,8 @@ def get_binary_predictions(pred, threshold=0.5):
     Convert [0,1] real number predictions to binary 1 or 0 predictions
     Using 0.5 as its default threshold unless specified
     '''
-    binary_pred = pred
+
+    binary_pred = copy.deepcopy(pred)
     high_indices = binary_pred >= threshold
     binary_pred[high_indices] = 1
     low_indices = binary_pred < threshold
