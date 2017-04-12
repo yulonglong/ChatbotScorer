@@ -159,6 +159,7 @@ class Evaluator(object):
                 self.best_test = [self.test_correlation, self.test_p_value, -1, -1]
                 self.best_dev_epoch = epoch
                 model.save_weights(self.out_dir + '/models/best_model_weights_f' + str(self.fold) + '.h5', overwrite=True)
+                self.dump_predictions(self.dev_pred, self.test_pred, 9999)
                 self.test_best_pred = self.test_pred
                 
             if self.test_correlation > self.best_test_missed:
@@ -188,6 +189,7 @@ class Evaluator(object):
                                 self.test_precision, self.test_accuracy]
                 self.best_dev_epoch = epoch
                 model.save_weights(self.out_dir + '/models/best_model_weights_f' + str(self.fold) + '.h5', overwrite=True)
+                self.dump_predictions(self.dev_pred, self.test_pred, 9999)
                 self.dump_test_dataset()
 
             if self.test_f1 > self.best_test_missed:
