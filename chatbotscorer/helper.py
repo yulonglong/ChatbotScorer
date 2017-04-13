@@ -103,3 +103,38 @@ def compute_class_weight(train_y):
 
     logger.info('Class weight dictionary: ' + str(class_weight))
     return class_weight
+
+
+def get_bag_of_words(train_x, test_x):
+    maxvoc=0
+    vocList = []
+    for i in range(2):
+        for j in range(len(train_x[i])):
+            if (len(train_x[i][j]) > 0):
+                maxvoc = max(maxvoc, max(train_x[i][j]))
+                vocList.extend(train_x[i][j])
+    ltrain_x = np.zeros((len(train_x[0]), (maxvoc + 1) * 2))
+    ltest_x = np.zeros((len(test_x[0]), (maxvoc + 1) * 2))
+    for i in range(len(train_x[0])):
+        for j in range(len(train_x[0][i])):
+            if (train_x[0][i][j] > 0):
+                ltrain_x[i][train_x[0][i][j]] += 1
+    for i in range(len(train_x[1])):
+        for j in range(len(train_x[1][i])):
+            if (train_x[1][i][j] > 0):
+                ltrain_x[i][train_x[1][i][j] + maxvoc + 1] += 1
+    for i in range(len(test_x[0])):
+        for j in range(len(test_x[0][i])):
+            if (test_x[0][i][j] > 0):
+                if (test_x[0][i][j] in vocList):
+                    ltest_x[i][test_x[0][i][j]] += 1
+                else:
+                    ltest_x[i][0] += 1
+    for i in range(len(test_x[1])):
+        for j in range(len(test_x[1][i])):
+            if (test_x[1][i][j] > 0):
+                if (test_x[1][i][j] in vocList):
+                    ltest_x[i][test_x[1][i][j] + maxvoc + 1] += 1
+                else:
+                    ltest_x[i][maxvoc + 1] += 1
+    return ltrain_x, ltest_x

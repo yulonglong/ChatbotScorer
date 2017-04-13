@@ -6,6 +6,7 @@ from time import time
 import sys
 import chatbotscorer.utils as U
 import chatbotscorer.helper as helper
+import chatbotscorer.svmrf as svmrf
 import pickle as pk
 import os.path
 
@@ -61,12 +62,14 @@ U.print_args(args)
 #
 
 valid_model_type = {
+    'svm',
+    'rf',
     'cnn',
     'cnn2',
     'vdcnn',
     'rnn',
     'brnn',
-    'brnn2',
+    'brnn2'
 }
 
 assert args.model_type in valid_model_type
@@ -116,6 +119,16 @@ for fold in range(10):
     maxlen = global_vocab[fold]
 
     original_test_x = global_original_test_x[fold] # To see real-life cases
+    
+    if args.model_type == 'svm' or args.model_type == 'rf':
+        test1, test2 = svmrf.run_svmrf(args, fold, train_x, train_y, test_x, test_y)
+        if args.label_type == 'mean':
+            total_correlation += test1
+            total_p_value += test2
+        else:
+            total_f1 += test1
+            total_acc += test2
+        continue
 
     ############################################################################################
     ## Padding to dataset for statistics
