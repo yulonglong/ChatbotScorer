@@ -1,2 +1,2 @@
 # ChatbotScorer
-(Private). For private use.
+Automated Scoring of Chatbot Response in Conversational Dialogue
