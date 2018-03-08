@@ -13,7 +13,7 @@ from scipy.stats import pearsonr
 logger = logging.getLogger(__name__)
 
 
-def run_svmrf(args, fold, train_x, train_y, test_x, test_y):
+def run_svmrf(args, fold, train_x, train_y, test_x, test_y, vocab=None):
     ltrain_x, ltest_x = helper.get_bag_of_words(train_x, test_x)
     
     # np.savetxt(args.out_dir_path + '/preds/train_x_f' + str(fold) + '.txt', ltrain_x, fmt='%i')
@@ -51,6 +51,27 @@ def run_svmrf(args, fold, train_x, train_y, test_x, test_y):
                 min_impurity_split=1e-07, bootstrap=True, oob_score=False, n_jobs=1, \
                 random_state=None, verbose=0, warm_start=False, class_weight=None)
     clf.fit(ltrain_x, train_y)
+
+
+    #############################################
+    ## Get feature weights from RF
+    #
+    if (args.is_show_weights):
+        importances = clf.feature_importances_
+        std = np.std([tree.feature_importances_ for tree in clf.estimators_],
+                    axis=0)
+        indices = np.argsort(importances)[::-1]
+        logger.info("=========== Feature ranking ============")
+        for f in range(10):
+            currWord = ""
+            for key, value in vocab.iteritems():    # for name, age in list.items():  (for Python 3.x)
+                if value == (indices[f]%len(vocab)):
+                    currWord = key
+                    break
+            logger.info("%d. %s (%f)" % (f + 1, currWord, importances[indices[f]]))
+            
+    ##############################################
+    
     
     test_pred = clf.predict(ltest_x)
     # logger.info(test_pred)

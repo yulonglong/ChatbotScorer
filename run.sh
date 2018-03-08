@@ -2,4 +2,5 @@
 python main.py \
 -o output \
 -tr data/TickTock.xml \
--lt mean -t svm
+-lt mean -t rf \
+-sd -sw

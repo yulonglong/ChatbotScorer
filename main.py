@@ -43,6 +43,8 @@ parser.add_argument("--emb", dest="emb_path", type=str, metavar='<str>', help="T
 parser.add_argument("--epochs", dest="epochs", type=int, metavar='<int>', default=50, help="Number of epochs (default=50)")
 parser.add_argument("--seed", dest="seed", type=int, metavar='<int>', default=1337, help="Random seed (default=1337)")
 parser.add_argument("-dd", "--dump-data", dest="is_dump_data", action='store_true', help="Flag to use to dump train, valid, and test data for all folds")
+parser.add_argument("-sd", "--show-distribution", dest="is_show_distribution", action='store_true', help="Flag to show the distribution (count) of the ground truth in the dataset")
+parser.add_argument("-sw", "--show-weights", dest="is_show_weights", action='store_true', help="Flag to show Random Forest top 10 weights (most important word)")
 
 
 args = parser.parse_args()
@@ -106,6 +108,28 @@ total_test_y = np.array([])
 
 total_train_time = 0
 total_eval_time = 0
+
+##################################
+## Show Ground Truth Distribution/Count
+#
+if (args.is_show_distribution):
+    train_y = global_train_y[0]
+    dev_y = global_dev_y[0]
+    test_y = global_test_y[0]
+    y = np.concatenate((train_y,dev_y,test_y))
+
+    freq_table = dict()
+    for curr_scores in y:
+        if curr_scores in freq_table.keys():
+            freq_table[curr_scores] = freq_table[curr_scores]  + 1
+        else:
+            freq_table[curr_scores] = 1
+    logger.info("=========== Distribution of dataset ============")
+    for key, value in sorted(freq_table.items()):
+        logger.info("{} : {}".format(key, value))
+    logger.info("Total dataset size: " + str(len(y)))
+#########################################
+
 for fold in range(10):
     logger.info("========================== FOLD %i ===============================" % fold)
     
@@ -121,7 +145,7 @@ for fold in range(10):
     original_test_x = global_original_test_x[fold] # To see real-life cases
     
     if args.model_type == 'svm' or args.model_type == 'rf':
-        test1, test2 = svmrf.run_svmrf(args, fold, train_x, train_y, test_x, test_y)
+        test1, test2 = svmrf.run_svmrf(args, fold, train_x, train_y, test_x, test_y, vocab=vocab)
         if args.label_type == 'mean':
             total_correlation += test1
             total_p_value += test2
