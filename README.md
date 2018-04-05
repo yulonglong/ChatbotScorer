@@ -8,6 +8,8 @@ Please contact me at sky@u.nus.edu if you have any questions.
 
 Please note that the experiments in this repository was done in early 2017. The rate of development of CUDA drivers and deep learning libraries (Keras, Theano, TensorFlow, etc) is very rapid. You may need to spend time debugging and getting the correct setup in order to run or replicate our experiments.
 
+We are not providing any test scripts as all the models are exploratory and experimental. Our implementation is able to do training and testing/evaluation only using the format of the xml files provided by WOCHAT.
+
 **TLDR:**  
 - Assuming you are on Ubuntu 16.04 with Python 2.7, open terminal at this repository as current directory
 - `./setup.sh` (Install packages) 
