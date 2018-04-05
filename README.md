@@ -9,7 +9,7 @@ Please contact me at sky@u.nus.edu if you have any questions.
 Please note that the experiments in this repository was done in early 2017. The rate of development of CUDA drivers and deep learning libraries (Keras, Theano, TensorFlow, etc) is very rapid. You may need to spend time debugging and getting the correct setup in order to run or replicate our experiments.
 
 **TLDR:**  
-- Assuming you are on Ubuntu 16.04 with Python 2.7, open terminal  
+- Assuming you are on Ubuntu 16.04 with Python 2.7, open terminal at this repository as current directory
 - `./setup.sh` (Install packages) 
 - `cd embedding && ./run.sh && cd ..` (Download and Prepare word embedding)
 - `./run_train_rf.sh` (Train Random Forests model)
@@ -41,10 +41,15 @@ If you are running a UNIX based machine, you can run the shell script `./setup.s
 - It will train the best CNN model with TickTock dataset, optimistic ground truth
 - Please make sure Nvidia CUDA is installed to be able to train the model using GPU. We emphasize again that we only tested with CUDA 8.0 and Nvidia driver 384.111. It might not work with newer version.
 - For more details on the training arguments, refer to the sample `run_train_cnn.sh` shell script  
-- The full training scripts for all dataset and all ground truth (e.g., optimistic, pessimistic, and averaging), please refer to `train_cnn_mot.sh` and `train_lstm_att.sh`.
+- The full training scripts for all dataset and all ground truth (e.g., optimistic, pessimistic, and averaging), please refer to `./command/train_cnn_mot.sh` and `./command/train_lstm_att.sh`.
 
 **To train random forests/SVM model**
 - Execute `./run_train_rf.sh`
 - It will train the best Random Forest Model model with TickTock dataset, optimistic ground truth
 - For more details on the training arguments, refer to the sample `run_train_rf.sh` shell script  
-- The full training scripts for all dataset and all ground truth (e.g., optimistic, pessimistic, and averaging), please refer to `train_rf_svm.sh`.
+- The full training scripts for all dataset and all ground truth (e.g., optimistic, pessimistic, and averaging), please refer to `./command/train_rf_svm.sh`.
+
+**For voting optimistic and pessimistic model**
+- Run any model with all the ground truth (optimistic, pessimistic, and averaging), at least one model per ground truth.  
+- Then edit `run_voting.sh` to use the output folder name for all the three models.  
+- Execute `./run_voting.sh` to see the voting results in `voting` folder by default, unless the output folder is changed.  
