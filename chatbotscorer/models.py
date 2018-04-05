@@ -33,6 +33,7 @@ def create_model(args, overal_maxlen, vocab):
     default_dropout = args.dropout_rate
     cnn_border_mode='same'
 
+    print(args.model_type)
     if args.model_type == 'cnn':
         logger.info('Building a CNN model')
         assert (args.cnn_dim > 0)
@@ -77,7 +78,7 @@ def create_model(args, overal_maxlen, vocab):
                 model.emb_index.append(model_layer_index)
             model_layer_index += 1
             
-    if args.model_type == 'cnn2':
+    elif args.model_type == 'cnn2':
         logger.info('Building a CNN2 model (concat after pooling)')
         assert (args.cnn_dim > 0)
 
