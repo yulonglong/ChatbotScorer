@@ -41,14 +41,14 @@ def run_svmrf(args, fold, train_x, train_y, test_x, test_y, vocab=None):
             clf = RandomForestRegressor(n_estimators=50, criterion='mse', \
                 max_depth=20, min_samples_split=2, min_samples_leaf=1, \
                 min_weight_fraction_leaf=0.0, max_features='auto', max_leaf_nodes=None, \
-                min_impurity_split=1e-07, bootstrap=True, oob_score=False, n_jobs=1, \
+                min_impurity_decrease=1e-07, bootstrap=True, oob_score=False, n_jobs=1, \
                 random_state=None, verbose=0, warm_start=False)
         else:
             from sklearn.ensemble import RandomForestClassifier
             clf = RandomForestClassifier(n_estimators=50, criterion='entropy', \
                 max_depth=20, min_samples_split=2, min_samples_leaf=1,\
                 min_weight_fraction_leaf=0.0, max_features='auto', max_leaf_nodes=None,\
-                min_impurity_split=1e-07, bootstrap=True, oob_score=False, n_jobs=1, \
+                min_impurity_decrease=1e-07, bootstrap=True, oob_score=False, n_jobs=1, \
                 random_state=None, verbose=0, warm_start=False, class_weight=None)
     clf.fit(ltrain_x, train_y)
 
