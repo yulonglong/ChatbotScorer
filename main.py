@@ -67,11 +67,7 @@ valid_model_type = {
     'svm',
     'rf',
     'cnn',
-    'cnn2',
-    'vdcnn',
-    'rnn',
-    'brnn',
-    'brnn2'
+    'rnn'
 }
 
 assert args.model_type in valid_model_type
